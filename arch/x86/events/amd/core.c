@@ -634,7 +634,6 @@ static bool amd_pmu_test_overflow_status(int idx)
 	return amd_pmu_get_global_status() & BIT_ULL(idx);
 }
 
-DEFINE_STATIC_CALL(amd_pmu_test_overflow, amd_pmu_test_overflow_topbit);
 
 /*
  * When a PMC counter overflows, an NMI is used to process the event and
@@ -655,8 +654,15 @@ static void amd_pmu_wait_on_overflow(int idx)
 	 * forever...
 	 */
 	for (i = 0; i < OVERFLOW_WAIT_COUNT; i++) {
-		if (!static_call(amd_pmu_test_overflow)(idx))
-			break;
+                if ( x86_pmu.version >= 2 ) {
+                        if ( !amd_pmu_test_overflow_status(idx) )
+                                break;
+                }
+                else {
+                        if ( !amd_pmu_test_overflow_topbit(idx) )
+                                break;
+                }
+
 
 		/* Might be in IRQ context, so can't sleep */
 		udelay(1);
@@ -1158,7 +1164,6 @@ static int __init amd_core_pmu_init(void)
 		x86_pmu.disable_all = amd_pmu_v2_disable_all;
 		x86_pmu.enable = amd_pmu_v2_enable_event;
 		x86_pmu.handle_irq = amd_pmu_v2_handle_irq;
-		static_call_update(amd_pmu_test_overflow, amd_pmu_test_overflow_status);
 	}
 
 	/*
