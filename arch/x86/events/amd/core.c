@@ -696,6 +696,27 @@ static void amd_pmu_check_overflow(void)
 	}
 }
 
+static void amd_pmu_enable_event(struct perf_event *event)
+{
+        if (__this_cpu_read(cpu_hw_events.enabled))
+                __x86_pmu_enable_event(&event->hw,
+                                       ARCH_PERFMON_EVENTSEL_ENABLE);
+}
+
+static void amd_pmu_enable_all(int added)
+{
+        struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+        int idx;
+
+        for (idx = 0; idx < x86_pmu.num_counters; idx++) {
+                /* only activate events which are marked as active */
+                if (!test_bit(idx, cpuc->active_mask))
+                        continue;
+
+                amd_pmu_enable_event(cpuc->events[idx]);
+        }
+}
+
 static void amd_pmu_v2_enable_event(struct perf_event *event)
 {
 	struct hw_perf_event *hwc = &event->hw;
@@ -735,7 +756,6 @@ static void amd_pmu_disable_event(struct perf_event *event)
 
 static void amd_pmu_disable_all(void)
 {
-	amd_brs_disable_all();
 	x86_pmu_disable_all();
 	amd_pmu_check_overflow();
 }
@@ -786,14 +806,19 @@ static inline int amd_pmu_adjust_nmi_window(int handled)
 static int amd_pmu_handle_irq(struct pt_regs *regs)
 {
 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
-	int active, handled;
+	int handled;
+	int pmu_enabled;
 
-	/*
-	 * Obtain the active count before calling x86_pmu_handle_irq() since
-	 * it is possible that x86_pmu_handle_irq() may make a counter
-	 * inactive (through x86_pmu_stop).
-	 */
-	active = __bitmap_weight(cpuc->active_mask, X86_PMC_IDX_MAX);
+        /*
+         * Save the PMU state.
+         * It needs to be restored when leaving the handler.
+         */
+        pmu_enabled = cpuc->enabled;
+        cpuc->enabled = 0;
+
+        /* stop everything */
+        amd_pmu_disable_all();
+
 
 	/* Process any counter overflows */
 	handled = x86_pmu_handle_irq(regs);
