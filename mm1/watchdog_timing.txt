@@ -1,0 +1,26 @@
+cat /proc/sys/kernel/watchdog_thresh
+
+program:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int c, char **argv)
+{
+        int ret = 0;
+        int gb = 128;
+        long mem_size = 1024 * 1024 * 1024;
+        mem_size = mem_size * gb;
+
+        long *ptr = (long *) (malloc(mem_size ));
+        memset(ptr, 'a',mem_size-1);
+        free(ptr);
+        return ret;
+}
+
+
+compilation:
+gcc -m64 mem1.c
+
+./a.out

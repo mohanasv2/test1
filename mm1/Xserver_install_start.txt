@@ -1,0 +1,42 @@
+
+sudo yum install xorg-x11-server-Xorg xorg-x11-xinit xorg-x11-utils xorg-x11-apps
+
+systemctl set-default graphical.target
+
+systemctl start  graphical.target
+
+
+Enable the following in: /etc/ssh/sshd_config
+
+X11Forwarding yes
+X11UseLocalhost yes
+
+Restart SSH daemons: systemctl restart sshd
+
+
+Allow Local Connections (Xhost):
+Open a terminal.
+Run: xhost +local: (You might need sudo for this)
+
+
+[ ssh -X amd@<ip addr>  ]  ==> in case DISPLAY not coming, even after  
+   a) enabling X11 forwarding & restarting sshd
+   b) xhots +local:
+
+Unable to access the following system's BMCs:
+
+https://volcano-99fc.amd.com/
+https://volcano-9b0c.amd.com/
+https://volcano-9b5e.amd.com/
+
+
+Venice is up with "VeLinux"  & the IP is 10.216.179.243.
+When you reboot the system,  the network will be up, but without IP. You need to run the following script from the BMC console login:
+
+sudo /home/amd/mm_netconf.sh
+
+This will enable IP address for the port. Each time your reboot, run the above script to configure the IP. There is some problem with the DHCP server not assigning IP to this system.
+
+openEuler also installed, follow same procedure for configuring IP [ there also /home/amd/mm_netconf.sh ]
+
+Tomorrow, I will install OpenCloudOS on Venice.

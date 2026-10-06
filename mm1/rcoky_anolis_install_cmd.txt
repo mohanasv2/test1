@@ -1,0 +1,19 @@
+# install via dnf, but skip the fragile %post (equivalent to --noscripts)
+sudo dnf install -y --setopt=tsflags=noscripts ./kernel-5.10.134_bootfix_20260729-1.x86_64.rpm
+
+# confirm files + modules landed
+ls -la /boot/vmlinuz-5.10.134-bootfix-20260729 /boot/System.map-5.10.134-bootfix-20260729
+ls -ld /usr/lib/modules/5.10.134-bootfix-20260729
+
+# finalize the modern way (builds initramfs + grub entry, uses /boot not the bad ESP path)
+sudo depmod 5.10.134-bootfix-20260729
+sudo kernel-install add 5.10.134-bootfix-20260729 /boot/vmlinuz-5.10.134-bootfix-20260729
+
+# verify bootable
+ls -la /boot/initramfs-5.10.134-bootfix-20260729.img
+sudo grubby --info=/boot/vmlinuz-5.10.134-bootfix-20260729
+
+
+rpm option:
+
+rpm -ivh --noscripts  <rpm>

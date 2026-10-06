@@ -1,0 +1,110 @@
+Enabling 1GB & 2MB huge pages :
+
+Host side:
+
+1) Check whether H/W supports huge page: 
+    lscpu | grep pdpe1gb
+
+2) Enable huge page through Linux boot command line
+
+  In /etc/default/grub, add the following line: 
+  GRUB_CMDLINE_LINUX="default_hugepagesz=1G hugepagesz=1G hugepages=64 hugepagesz=2M hugepages=32768"
+
+  Then run update-grub or grub2-mkconfig -o <grub file> based on the distro
+
+3) Reboot the host
+
+4) cat /proc/cmdline
+BOOT_IMAGE=(hd1,gpt2)/vmlinuz-6.6.102-pstate-ph1-test root=/dev/mapper/ao_anolis-root ro resume=/dev/mapper/ao_anolis-swap rd.lvm.lv=ao_anolis/root rd.lvm.lv=ao_anolis/swap rhgb quiet amd_pstate=active default_hugepagesz=1G hugepagesz=1G hugepages=64 hugepagesz=2M hugepages=32768
+
+
+5) Check Huge page allocation through /proc/meminfo
+
+  cat /proc/meminfo | grep Huge
+AnonHugePages:    983040 kB
+ShmemHugePages:        0 kB
+FileHugePages:         0 kB
+HugePages_Total:      64
+HugePages_Free:       64
+HugePages_Rsvd:       0
+HugePages_Surp:        0
+Hugepagesize:    1048576 kB
+Hugetlb:        134217728 kB
+root@volcano9f8e-oshost:~#
+
+6)
+# mkdir /dev/hugepages1G
+# mount -t hugetlbfs -o pagesize=1G none /dev/hugepages1G
+# mkdir /dev/hugepages2M
+# mount -t hugetlbfs -o pagesize=2M none /dev/hugepages2M
+
+7) service restart libvirtd
+
+ [ Check  /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages & /sys/devices/system/node/node1/hugepages/hugepages-1048576kB/nr_hugepages ]
+
+Guest side:
+
+
+1G huge page size guest:
+
+1) Enable huge page through /etc/default/grub
+
+ GRUB_CMDLINE_LINUX="resume=/dev/mapper/ao_anolis-swap rd.lvm.lv=ao_anolis/root rd.lvm.lv=ao_anolis/swap rhgb default_hugepagesz=1G hugepagesz=1G hugepages=8 quiet"
+
+ Then run update-grub or grub2-mkconfig -o <grub file> based on the distro
+
+2) Reboot the guest
+
+3)  cat /proc/cmdline
+BOOT_IMAGE=(hd0,gpt2)/vmlinuz-6.6.102-pstate-p2 root=/dev/mapper/ao_anolis-root ro resume=/dev/mapper/ao_anolis-swap rd.lvm.lv=ao_anolis/root rd.lvm.lv=ao_anolis/swap rhgb default_hugepagesz=1G hugepagesz=1G hugepages=8 quiet
+
+4)Check Huge page allocation through /proc/meminfo
+
+cat /proc/meminfo | grep Huge
+AnonHugePages:    266240 kB
+ShmemHugePages:        0 kB
+FileHugePages:     79872 kB
+HugePages_Total:      8
+HugePages_Free:       8
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:    1048576 kB
+
+2MB huge page size guest:
+
+1) Enable huge page through /etc/default/grub
+
+ GRUB_CMDLINE_LINUX="resume=/dev/mapper/ao_anolis-swap rd.lvm.lv=ao_anolis/root rd.lvm.lv=ao_anolis/swap rhgb default_hugepagesz=2M hugepagesz=2M hugepages=4096 quiet"
+
+ Then run update-grub or grub2-mkconfig -o <grub file> based on the distro
+
+  remaining similar to 1GB huge page
+
+
+Guest xml config:
+
+<memoryBacking>
+   <hugepages/>
+</memoryBacking>
+
+Link: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/virtualization_tuning_and_optimization_guide/sect-virtualization_tuning_optimization_guide-memory-huge_pages-1gb-runtime
+
+
+Additional patch:
+
+The following patch has been backported to Infobell backport tree and it fixed the huge page reclaim delay during the VM shutdown.
+ca79e02f0122 *mm: guestmem_hugetlb: Wait for hugepage cleanup before inode teardown
+
+The Infobell backport tree link: https://github.com/AMDEPYC/Linux_Backport/tree/VeLinux_6.6_SNP_HugeTlbfs_support 
+ - It contains phase 1, 2 , 3 (T1 & T2) patches & changes of patch - "ca79e02f0122".
+
+After backporting the following commit, delay in huge page reclaim during the VM shutdown is fixed.
+ 
+ ca79e02f0122 *mm: guestmem_hugetlb: Wait for hugepage cleanup before inode teardown
+
+The Infobell backport tree link: https://github.com/AMDEPYC/Linux_Backport/tree/VeLinux_6.6_SNP_HugeTlbfs_support 
+ - It contains phase 1, 2 , 3 (T1 & T2) patches & changes of patch - "ca79e02f0122".
+
+Thanks for letting me know. I understand this from Infobell’s perspective.
+
+

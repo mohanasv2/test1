@@ -1,0 +1,81 @@
+
+RHEL/Anolis.ClouOS/Euler:
+
+[amd@volcano9b0c-os ~]$ cat kvm_net.sh
+virsh net-define ./kvm_net.xml
+virsh net-start br0
+virsh net-autostart br0
+virsh net-list --all
+
+
+[amd@volcano9b0c-os ~]$ cat kvm_net.xml
+<network>
+  <name>br0</name>
+  <forward mode="bridge"/>
+  <bridge name="br0" />
+</network>
+
+
+run:
+
+sudo ./kvm_net.sh
+
+
+[root@volcano9f6e ~]#  virsh net-dumpxml br0
+<network>
+  <name>br0</name>
+  <uuid>64e53157-83b5-4f26-bfe6-97ee9b5f49bb</uuid>
+  <forward mode='bridge'/>
+  <bridge name='br0'/>
+</network>
+
+[root@volcano9f6e ~]#  virsh net-dumpxml default
+<network>
+  <name>default</name>
+  <uuid>a2385aa2-047d-4ad5-85cc-4929e3612cf2</uuid>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:10:36:15'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+    </dhcp>
+  </ip>
+</network>
+
+[root@volcano9f6e ~]# virsh net-list --all
+ Name      State    Autostart   Persistent
+--------------------------------------------
+ br0       active   yes         yes
+ default   active   yes         yes
+
+[root@volcano9f6e ~]#
+
+
+default KVM net definiton xml:
+
+###################################
+<network>
+  <name>default</name>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+    </dhcp>
+  </ip>
+</network>
+###################################
+
+/etc/libvirt/qemu/networks/default.xml
+ virsh net-define /etc/libvirt/qemu/networks/default.xml
+ virsh net-start default
+

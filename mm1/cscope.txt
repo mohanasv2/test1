@@ -1,0 +1,33 @@
+######################################################################################
+###script for extracting *.c,*.h, .s , Makefiles, Kconfig files for building cscope
+######################################################################################
+
+## Install cscope:  sudo apt install cscope
+
+
+#run the follwoig part only once
+############################################
+  ## Linux src  => cd to linux source dir & then run 
+  echo " \n Adding files to  ./filelist....\n"
+  find  ./ -name '*.[cC]' -print > ./filelist
+  find  ./ -name '*.[hH]' -print >> ./filelist
+  find  ./ -name '*Kconfig*' -print >> ./filelist
+  find  ./ -name '*.[sS]' -print >> ./filelist  ## assembler code
+  find  ./ -name '*Makefile*' -print >> ./filelist  
+  echo " \n Building source database...\n"
+
+  # build DB
+  cscope -b -i ./filelist > ./file_list.log 2>&1
+
+############################################
+
+# once DB build, then just invoke below command to search in the source
+# Run cscope
+  cscope -d -P ./ -f ./cscope.out
+
+
+Kernel: arch/x86/boot/bzImage is ready  (#3)
+ERROR: "cpu_llc_id" [arch/x86/events/amd/amd-uncore.ko] undefined!
+make[1]: *** [scripts/Makefile.modpost:93: __modpost] Error 1
+make: *** [Makefile:1364: modules] Error 2
+^C

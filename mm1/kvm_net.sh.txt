@@ -1,0 +1,13 @@
+virsh net-define ./kvm_net.xml
+virsh net-start br0
+virsh net-autostart br0
+virsh net-list --all
+
+
+cat ./kvm_net.xml:
+
+<network>
+  <name>br0</name>
+  <forward mode="bridge"/>
+  <bridge name="br0" />
+</network>

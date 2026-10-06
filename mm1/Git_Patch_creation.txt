@@ -1,0 +1,73 @@
+
+## Patch creation:
+
+   git format-patch -o ./output --cover-letter -n --thread=shallow [commit ID1..commit ID N ]
+
+  git format-patch -o ./output --cover-letter -n --thread=shallow \ 
+    bc844d58f697dff3ded4b410094ee89f5cedc04c..6387402b9cfdb90b6ed8c073fc669968ae3a7046
+
+
+Patch readme [ sample ]
+########################
+
+Patch for perfmon_v2  
+
+Instructions for this README were developed on ubuntu 20.04.6. This patch enables perfmonv2
+features on Host only, not on Guest VMs. So, it is recommended to install this patch only on Host.
+Before applying the patch, please check whether the H/W supports the perfmonv2 H/W feature using
+the following command:
+
+$cpuid -i -1 -l 0x80000022 -r
+ CPU:
+   0x80000022 0x00: eax=0x00000003 ebx=0x00044106 ecx=0x00000008 edx=0x00000000
+
+Please follow these instructions to build, install and verify  5.4.32 perfmonV2 kernel support
+
+1. Create 5.4.32 build tree
+- wget https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/snapshot/linux-5.4.32.tar.gz
+- tar xvf linux-5.4.32.tar.gz
+- cd linux-5.4.32
+  git init
+- Download the pacthes to PATCHDIR [ ex:PATCHDIR=/tmp/perf2patch ] & apply patches in this repo:
+  git apply $PATCHDIR/*.patch
+
+2. Configure the kernel, disable debian certificate and key checks and create deb packages
+   cp /boot/config-$(uname -r) .config
+   ./scripts/config --disable CONFIG_SYSTEM_TRUSTED_KEYRING
+   ./scripts/config --disable CONFIG_SYSTEM_EXTRA_CERTIFICATE
+   ./scripts/config --disable CONFIG_SECONDARY_TRUSTED_KEYRING
+   ./scripts/config --disable CONFIG_SYSTEM_TRUSTED_KEYS 
+   ./scripts/config --disable CONFIG_SYSTEM_REVOCATION_LIST
+   ./scripts/config --disable SYSTEM_REVOCATION_KEYS
+
+   yes "" | make olddefconfig
+   make -j `getconf _NPROCESSORS_ONLN` bindeb-pkg LOCALVERSION=-perfmonv2
+
+3. Install the packages 
+   cd ..
+   sudo dpkg -i linux-image-5.4.32-perfmonv2_5*deb
+   sudo dpkg -i linux-libc-dev_5.4.32-perfmonv2*deb
+
+4. reboot and select the perfmonv2 kernel
+
+5. Checking perfmonv2 enablement on the system, after patch installed:
+
+   - Check for perfmon_v2 , in Flags section of  "lscpu" command output
+
+6. Simple perf tests to verify the perf tool works with perfmonv2 enabled kernel:
+
+  a) sudo perf test
+
+  b) perftool-testsuite [  https://github.com/rfmvh/perftool-testsuite ]
+     
+    i)   perftool-testsuite/base_stat$ sudo ./test_basic.sh
+
+    ii)  perftool-testsuite/base_stat$ sudo ./test_hw.sh
+
+    iii) perftool-testsuite/base_stat$ sudo ./test_pmu.sh
+  
+    
+Deviation: 
+In patch[7], perfmon version specific overflow check calls have been used, instead of static_call() and static_call_update() calls. Because static call feature is supported starting from kernel ver 5.10
+
+

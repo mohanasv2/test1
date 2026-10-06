@@ -1,0 +1,18 @@
+CPUID command:
+https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/c/cpuid-20230614-3.el8.x86_64.rpm
+
+for X2AVIC, the leaf is Fn8000_000A_EDX
+
+to get all info from this MSR register:   cpuid -1 -l 0x8000000A
+
+
+
+Patches backported since last update: 21
+Patches under backport: 14
+Pending patches(backlog):63
+Total patches backported so far : 87 (out of 164)  
+Blockers: None
+Additional info/help needed from China FAE team/other teams:  None
+Next actions:
+ - continuing the backport 
+

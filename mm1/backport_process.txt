@@ -1,0 +1,20 @@
+ 1. git clone <gitee master repo>
+ 2. git switch < to desired branch >
+ 3. git checkout
+ 4. open "Makefile" & check whether you are having the right version of the code , by checking version number.
+ 5. Create your own branch [ git branch <name> ]
+ 6. git switch <your branch>
+ 7. Add stable Linux source tree :
+      git remote add stable_repo  git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/ 
+ 8. git remote -v [ should show 2 repos, origin & stable_repo ]
+ 9. git fetch stable_repo
+ 10. git branch -r => should show all branches in Linux stable tree
+ 11. Now do "git cherry-pick <SHA ID>"
+ 12. Resolve conflicts
+ 13. git add <file name of all  resolved conflicting files >
+ 14. git commit --amend "your comment" --authentication
+ 15. Build the kernel
+ 16. If you see any compilation error, find the function or data & do "git blame" on that SHA id
+ 17. Resolve build errors & rebuild
+ 18. Continue 
+

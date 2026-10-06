@@ -1,0 +1,10 @@
+
+ # don't print column 6 & 8:
+ awk '{$6=$8=""; print $0}' /tmp/y1
+
+ awk '{$1=""; print $0}' log1-1
+
+example:
+
+ cat perf_pacthes | grep "^Y" | awk '{ $1=$2=$3=$4=$5="";print $0;}'  // don't print first 5 columns
+

@@ -1,0 +1,37 @@
+
+1.perf kvm stat record -p $(pgrep qemu) -- sleep 20
+
+  perf kvm stat record -p 128937 -- sleep 2
+
+  perf kvm stat report
+
+2. perf stat -e kvm:kvm_exit -p 128937 -- sleep 1  [ -p 128937 => qemu pid ]
+
+
+Note:
+####
+  kvm events list at: ls  /sys/kernel/tracing//events/kvm/
+
+
+#perf kvm stat live
+
+Analyze events for all VMs, all VCPUs:
+
+             VM-EXIT    Samples  Samples%     Time%    Min Time    Max Time         Avg time
+
+           interrupt   10980413    46.29%    52.97%      0.17us  36735.18us      0.82us ( +-   0.43% )
+                 msr   10748435    45.32%    35.02%      0.18us    908.53us      0.56us ( +-   0.02% )
+               vintr    1987115     8.38%     8.61%      0.30us     51.03us      0.74us ( +-   0.03% )
+                 npf       1961     0.01%     0.01%      0.28us     20.11us      1.10us ( +-   3.48% )
+                 hlt        740     0.00%     3.31%      0.45us  13752.90us    764.07us ( +-   8.06% )
+               pause        126     0.00%     0.07%      0.55us  11529.83us     92.88us ( +-  98.51% )
+               cpuid        113     0.00%     0.00%      0.20us      1.43us      0.39us ( +-   5.19% )
+                 nmi         39     0.00%     0.00%      0.40us      1.69us      0.93us ( +-   6.27% )
+                  io         15     0.00%     0.00%      2.34us     29.40us      7.53us ( +-  27.77% )
+           hypercall          5     0.00%     0.00%      1.66us    141.75us     32.03us ( +-  85.82% )
+
+Total Samples:23718962, Total events handled time:17061220.16us.
+
+9611222994 ramadasa d
+
+9008455677 umesha

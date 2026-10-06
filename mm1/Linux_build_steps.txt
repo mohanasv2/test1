@@ -1,0 +1,104 @@
+
+Linux Kernel build steps:
+
+1) Download the Linux source from https://www.kernel.org/
+  
+  Ex:
+  $ wget https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/snapshot/linux-5.19.17.tar.gz
+    [ Torvalds : https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/ ]
+  $ tar -xvf linux-5.19.17.tar.gz
+
+2) Install required build packages
+
+  sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison pahole
+
+  yum install elfutils-libelf-devel  make git gcc openssl-devel bc bison flex rpm-build pahole
+
+3) Configure kernel using "make menuconfig"
+
+4) Disable the following:
+
+  run the following commands : 
+
+  scripts/config --disable SYSTEM_TRUSTED_KEYS
+  scripts/config --disable SYSTEM_REVOCATION_KEYS
+  scripts/config --disable  CONFIG_DEBUG_INFO_BTF
+  scripts/config --disable NET_VENDOR_NETRONOME
+  scripts/config --disable SYSTEM_TRUSTED_KEYRING
+
+5) Build the kernel:
+
+  From Linux source base dir run:  make -j<no of cpus>
+
+6)  Install the required modules with this command
+    sudo make modules_install
+
+7) install the kernel by typing:  sudo make install 
+
+8) Update the Bootloader (Optional)
+
+  a) Update the initramfs to the installed kernel version: 
+      sudo update-initramfs -c -k 6.0.7
+
+  b) Update the GRUB bootloader with this command:
+      sudo update-grub
+
+9) Reboot and Verify Kernel Version
+     uname -mrs
+   
+
+ Creating a debian Linux image after building kernel:
+
+ 1) make -j<no of cpus> bindeb-pkg LOCALVERSION=<new number>
+
+ 2) after build, it will create linux-image-<version>.deb & linux-libc-dev<version>.deb
+
+ 3) Now install the new packages:
+
+    sudo dpkg -i linux-image-<version>.deb  
+    sudo dpkg -i linux-libc-dev<version>.deb
+
+    sudo update-grub
+    sudo update-grub2
+
+ 4) sudo reboot
+
+ 5) The system will boot with new kernel
+
+
+5.10.0-136.12.0
+
+[ $ cp /boot/config-$(uname -r) .config;  $ yes "" | make olddefconfig ]
+
+make -j256 binrpm-pkg LOCALVERSION=-136.12.0_base
+
+
+kernel-5.10.0base-4.x86_64
+
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+grubby --info ALL
+
+sudo yum install bc gcc git vim time gcc-c++ kernel-devel perl make numactl openssl openssl-devel libmpc mpfr ncurses-devel bison tar rsync libstdc++-devel libtool bison flex zlib zlib-devel elfutils-libelf-devel ncurses-devel createrepo rpm-build rpmdevtools -y
+
+
+make -j256 bindeb-pkg LOCALVERSION=-INVL_all
+
+393954
+
+[root@10-100-158-78 rocky]# cat /mm2/etc/apt/sources.list
+#deb cdrom:[veLinux GNU/Linux 2.1 _Lyra_ - Unofficial amd64 DVD Binary-1 with firmware 20241112-02:13]/ lyra main
+[root@10-100-158-78 rocky]# cat /mm2/etc/os*
+PRETTY_NAME="veLinux GNU/Linux 2 (lyra)"
+NAME="veLinux GNU/Linux"
+VERSION_ID="2"
+VERSION="2 (lyra)"
+VERSION_CODENAME=lyra
+ID=velinux
+ID_LIKE=debian
+[root@10-100-158-78 rocky]#
+
+
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware

@@ -1,0 +1,24 @@
+qemu-img create -f qcow2 ubunt2204_test1.qcow2 64G
+
+qemu-system-x86_64 \
+    -name guest=ubunt2204_test1 \
+    -smp 8
+    -accel kvm \
+    -m 16384 \
+    -nic user,model=virtio \
+    -drive file=/home/amd/vol3/images/ubunt2204_test1.qcow2,media=disk,if=virtio \
+    -cdrom /home/amd/vol1/iso/ubuntu-22.04.4-live-server-amd64.iso \
+    -sdl
+
+
+sudo qemu-system-x86_64 \     
+-kernel kernel-qemu-4.14.79-stretch \
+-append "root=/dev/sda2 panic=1 rootfstype=ext4 rw" \
+-hda raspbian-stretch-lite_1.qcow \
+-cpu arm1176 -m 256 \
+-M versatilepb \
+-dtb versatile-pb.dtb \
+-no-reboot \
+-serial stdio \
+-display none \
+-net nic,addr=10.10.10.11/24, -net bridge,br=br0

@@ -1,0 +1,6 @@
+1. adduser newuser
+
+2. Grant Sudo Access:
+Add the user to the sudo group (Debian/Ubuntu/Kali) or wheel group (RHEL/CentOS/Rocky).
+Ubuntu/Debian/Kali: usermod -aG sudo newuser
+RHEL/CentOS/Rocky: usermod -aG wheel newuser

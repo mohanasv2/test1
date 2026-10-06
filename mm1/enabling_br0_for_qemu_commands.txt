@@ -1,0 +1,8 @@
+/etc/qemu/bridge.conf
+
+cat /etc/qemu/bridge.conf
+allow virbr0
+
+change :allow virbr0" to "allow all" 
+
+10.86.20.149

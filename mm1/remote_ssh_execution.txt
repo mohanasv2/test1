@@ -1,0 +1,81 @@
+
+
+Enabling SSH connection for display setup  required for web browser, virt-manager to work
+#################################
+checking: /etc/ssh/ssh_config
+Code:
+ForwardAgent yes
+ForwardX11 yes
+ForwardX11Trusted yes
+checking: /etc/ssh/sshd_config for
+Code:
+X11Forwarding yes
+X11DisplayOffset 10
+X11UseLocalHost yes
+PermitRootLogin yes
+UseLogin no
+
+restart sshd: service sshd restart
+
+After restarting sshd , relogin to the system using ssh connection & check whether DISPLAY variable set.
+$ echo $DISPLAY
+
+#################################
+
+ssh-keygen -t rsa
+
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.61
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.208
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.67
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.65
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.143
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.28
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.68
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.75
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.80
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.34
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.103
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.101
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.100
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.87
+ ssh-copy-id -i $HOME/.ssh/id_rsa.pub root@10.86.27.197
+
+/tmp/vms:
+ #ssh root@10.86.27.61  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5 2>&1 &   '
+ #ssh root@10.86.27.208  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5  2>&1 &   '
+ ssh root@10.86.27.67  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5    2>&1 & '
+ ssh root@10.86.27.65  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5    2>&1 & '
+ ssh root@10.86.27.143  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.28  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.68  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.75  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5    2>&1 &'
+ ssh root@10.86.27.80  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5    2>&1 &'
+ ssh root@10.86.27.34  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.103  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.101  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.100  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+ ssh root@10.86.27.87  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5    2>&1 & '
+ ssh root@10.86.27.197  'cd /home/amd/lkp-tests/ ;   ./sc1 > /tmp/run5   2>&1 & '
+
+
+
+Changing client timeout val for SSH connection:
+
+1) vi /etc/ssh/sshd_config
+2) ClientAliveInterval  1800  [ 1800 secs , 30 mins ]
+3) service sshd restart
+
+
+
+sshd -T | grep tcpkeepalive
+
+tcp_keepalive_time = 7200 # 2 hours
+tcp_keepalive_intvl = 75 # 75 seconds
+tcp_keepalive_probes = 9
+
+sshd -T | egrep 'clientalive|tcpkeepalive'
+tcpkeepalive yes
+clientaliveinterval 300
+clientalivecountmax 3
+
+==> increase countmax 

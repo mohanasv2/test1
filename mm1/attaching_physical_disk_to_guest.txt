@@ -1,0 +1,7 @@
+
+
+virsh attach-disk 
+
+# virsh attach-disk Guest1 /dev/sr0 vdc
+
+# virsh attach-disk Guest1 /dev/nvme3n1 vdn

@@ -1,0 +1,3 @@
+
+use powercap-info command line utility to check the TDP settings
+

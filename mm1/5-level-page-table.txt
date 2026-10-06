@@ -1,0 +1,29 @@
+To check if 5-level paging is enabled in Linux, you can use the command lscpu | grep -i la57. If the output contains la57, then 5-level paging is supported by the CPU.
+ Additionally, you can verify kernel support by checking the kernel configuration file for CONFIG_X86_5LEVEL=y
+
+gitee.com 180.76.198.225
+
+
+ubuntu 22.03, 24.04
+euler 22.03, 24.03
+anolis 8.10, 23.1,  23.2
+
+
+
+Abhishek
+Gokul
+
+"	Hemanth
+	Mohan
+	Priyanka
+	"Azam
+"	Chaitanya
+	Malathi
+	PVS Rao
+	Rahul
+	"Aditya
+
+"	Jeevan	Madhu	Latha	Prithivish	Rahul Kumar	Mukesh
+
+
+Waiting for Tencent's feedback on testing Ashish fixes with 6.15 kernel

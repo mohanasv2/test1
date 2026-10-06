@@ -1,0 +1,10 @@
+
+
+1) Include fedora "epel" repo
+2) dnf makecache
+3) yum install msr-tools
+
+example:
+
+[root@volcano9f8e-os epel9]# rdmsr -x 0xc0010131
+0   <=== on SNP host, this should be zero

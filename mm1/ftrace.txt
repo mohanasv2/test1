@@ -1,0 +1,249 @@
+
+Check if "tracefs" mounted:
+
+[root@volcano9f6e-os ~]# df -k  /sys/kernel/tracing
+Filesystem     1K-blocks  Used Available Use% Mounted on
+tracefs                0     0         0    - /sys/kernel/tracing
+
+
+[root@volcano9f6e-os tracing]# cat current_tracer
+nop
+[root@volcano9f6e-os tracing]# echo "function" > current_tracer
+[root@volcano9f6e-os tracing]# cat current_tracer
+function
+[root@volcano9f6e-os tracing]# pwd
+/sys/kernel/tracing
+
+Tracing functions:
+#######################
+
+echo function > /sys/kernel/tracing/current_tracer
+cat /sys/kernel/tracing/trace_pipe > /home/amd/mohan/ftrace.out &
+echo 1 > /sys/kernel/tracing/tracing_on
+sleep 1
+echo 0 > /sys/kernel/tracing/tracing_on
+
+
+checking kvm & kvm_amd module [and other modules] functions available :
+#####################################################################
+ cat /sys/kernel/tracing/available_filter_functions | grep "kvm*ioctl"
+
+ cat set_ftrace_filter
+  #### all functions enabled ####  [ means all functions in available_filter_functions  enabled for tracing ]
+
+  echo > set_ftrace_filter  [ sets " #### all functions enabled #### " ]
+
+  tracing kvm_vm_ioctl:
+
+  echo kvm_vm_ioctl > set_ftrace_filter
+
+
+cat /sys/kernel/tracing/set_ftrace_filter
+echo > /sys/kernel/tracing/set_ftrace_filter
+echo kvm_gmem_free_inode > /sys/kernel/tracing/set_ftrace_filter
+cat /sys/kernel/tracing/trace_pipe > /home/amd/mohan/ftrace.out &
+echo 1 > /sys/kernel/tracing/tracing_on
+## sleep 2
+echo 0 > /sys/kernel/tracing/tracing_on
+
+Tracing only one function and all of its children
+#################################################
+echo kvm_vm_ioctl > /sys/kernel/tracing/set_graph_function
+echo function_graph > /sys/kernel/tracing/current_tracer
+
+cat /sys/kernel/tracing/trace_pipe > /home/amd/mohan/ftrace.out &
+echo 1 > /sys/kernel/tracing/tracing_on
+
+virsh start anolis231-nosev-1
+
+echo 0 > /sys/kernel/tracing/tracing_on
+#################################################
+
+output (example):
+122)               |  kvm_vm_ioctl [kvm]() {
+ 122)               |    kvm_arch_vm_ioctl [kvm]() {
+ 122)   0.721 us    |      mutex_lock();
+ 122)               |      kvm_vm_ioctl_set_pit2 [kvm]() {
+ 122)   0.651 us    |        mutex_lock();
+ 122)               |        kvm_pit_load_count [kvm]() {
+ 122)   0.520 us    |          mutex_is_locked();
+ 122)               |          pit_load_count [kvm]() {
+ 122)               |            create_pit_timer.part.0 [kvm]() {
+ 122)               |              hrtimer_cancel() {
+ 122)   0.511 us    |                hrtimer_active();
+ 122)               |                hrtimer_try_to_cancel.part.0() {
+ 122)   0.521 us    |                  _raw_spin_lock_irqsave();
+ 122)   0.701 us    |                  __remove_hrtimer();
+ 122)   0.541 us    |                  _raw_spin_unlock_irqrestore();
+ 122)   3.735 us    |                }
+ 122)   5.949 us    |              }
+ 122)               |              kthread_flush_work() {
+ 122)   0.531 us    |                __init_swait_queue_head();
+ 122)   0.641 us    |                _raw_spin_lock_irq();
+ 122)   0.511 us    |                _raw_spin_unlock_irq();
+ 122)   4.487 us    |              }
+ 122)   1.021 us    |              ktime_get();
+ 122)               |              hrtimer_start_range_ns() {
+ 122)   0.511 us    |                _raw_spin_lock_irqsave();
+ 122)               |                __hrtimer_start_range_ns() {
+ 122)   0.551 us    |                  get_nohz_timer_target();
+ 122)   0.501 us    |                  _raw_spin_unlock();
+ 122)   0.511 us    |                  _raw_spin_lock();
+ 122)   0.750 us    |                  enqueue_hrtimer();
+ 122)   4.797 us    |                } /* __hrtimer_start_range_ns */
+ 122)   0.521 us    |                _raw_spin_unlock_irqrestore();
+ 122)   7.752 us    |              }
+ 122) + 21.883 us   |            }
+ 122) + 23.035 us   |          }
+ 122) + 25.469 us   |        }
+ 122)               |        kvm_pit_load_count [kvm]() {
+ 122)   0.511 us    |          mutex_is_locked();
+ 122)               |          pit_load_count [kvm]() {
+ 122)   0.571 us    |            ktime_get();
+ 122)   1.583 us    |          }
+ 122)   3.495 us    |        }
+ 122)               |        kvm_pit_load_count [kvm]() {
+ 122)   0.511 us    |          mutex_is_locked();
+ 122)               |          pit_load_count [kvm]() {
+ 122)   0.560 us    |            ktime_get();
+ 122)   1.522 us    |          }
+ 122)   3.676 us    |        }
+ 122)   0.541 us    |        mutex_unlock();
+ 122) + 37.497 us   |      }
+ 122)   0.510 us    |      mutex_unlock();
+ 122) + 42.023 us   |    }
+ 122) + 46.159 us   |  }
+
+
+"ftrace" script to trace kvm_vm_ioctl() kernel call, while starting a VM:
+
+############################################################
+echo kvm_vm_ioctl > /sys/kernel/tracing/set_graph_function
+echo function_graph > /sys/kernel/tracing/current_tracer
+
+cat /sys/kernel/tracing/trace_pipe > /tmp/ftrace.out &
+## start kernel  tracing
+echo 1 > /sys/kernel/tracing/tracing_on
+
+virsh start anolis231-nosev-1
+## stop tracing
+echo 0 > /sys/kernel/tracing/tracing_on
+
+############################################################
+
+
+Run this script on a host [ where you can create a VM ] & check /tmp/ftrace.out
+You can enter the function you want to trace by entering:
+echo <my kernel function > /sys/kernel/tracing/set_graph_function 
+
+Using ftrace you can check whether your backported patches new calls are invoked, where the qemu call fails inside
+the kernel and so on...without the need of  "printk()" ,rebuilding kernel & rebooting host...
+
+
+
+ftrace frontend tool: trace-cmd
+
+ yum install trace-cmd
+ trace-cmd record -p function_graph  -F /tmp/t1.out
+ trace-cmd report ./trace.dat  > ./tt2 2>&1
+
+option to get parameters of functions:
+  trace-cmd without "-p function " ==???
+
+
+scripts/faddr2line
+tools/debugging/kernel-chktaint
+
+svm_vcpu_reset => init_vmcb => avic_init_vmcb => avic_activate_vmcb => svm_set_x2apic_msr_interception
+
+
+events logging:
+############
+
+cd /sys/kernel/debug/tracing/
+echo nop > current_tracer
+echo 1 > tracing_on
+
+# Enable only GA Log events to avoid noisy output
+grep ga_log available_events > set_event
+
+# Verify correct event is set. Expect to see "kvm:kvm_avic_ga_log"
+cat set_event
+
+ echo kvm_avic_ga_log > /sys/kernel/tracing/set_event
+ echo 1 > /sys/kernel/tracing/tracing_on
+ tail -f trace
+ echo 0 > /sys/kernel/tracing/tracing_on
+
+
+hugrtllb ftrace:
+
+echo function > /sys/kernel/tracing/current_tracer
+cat /sys/kernel/tracing/set_ftrace_filter
+echo > /sys/kernel/tracing/set_ftrace_filter
+echo kvm_* > /sys/kernel/tracing/set_ftrace_filter
+echo guestmem_* >> /sys/kernel/tracing/set_ftrace_filter
+echo hugetlb_* >> /sys/kernel/tracing/set_ftrace_filter
+cat /sys/kernel/tracing/trace_pipe > /home/amd/mohan/ftrace.out &
+echo 1 > /sys/kernel/tracing/tracing_on
+ sleep 10
+echo 0 > /sys/kernel/tracing/tracing_on
+
+
+
+
+/sys/devices/system/cpu/cpu0/cpufreq//cpuinfo_max_freq
+4122755
+[root@volcano9b0c-hostos ftrace_test]# cat /sys/devices/system/cpu/cpu0/cpufreq//cpuinfo_min_freq
+1212575
+[root@volcano9b0c-hostos ftrace_test]#
+
+
+4122755  => 2122755
+1212575
+4122755
+1212575
+
+ Hi Prateek,
+
+  Could please tell me how to enable and test the AMD Preferred Core Rankings patches that you have upstreamed?. https://lore.kernel.org/all/20250409053446.23367-3-kprateek.nayak@amd.com/
+  We are backporting this feature to Alibaba & they are asking for the test case.
+
+Thanks,
+
+/sys/devices/system/cpu/500/online
+
+acpi_processor_notify() -> cpufreq_update_limits
+
+/sys/kernel/debug/sched/debug
+
+
+
+On CPPC/amd-pstate or intel_pstate/acpi-cpufreq, the highest performance value used by the governor should be refreshed.
+
+
+Ensure kernel options (built into 6.18 test/dev kernels on many distros):
+
+CONFIG_ACPI=y
+CONFIG_ACPI_DEBUGGER=y
+CONFIG_ACPI_DEBUGGER_USER=y
+
+
+
+Install tools & mount debugfs
+Shellsudo mkdir -p /sys/kernel/debugsudo mount -t debugfs debugfs /sys/kernel/debug# Install acpidbg (on Debian/Ubuntu: sudo apt ins
+
+yum install acpica-tools
+
+
+/usr/bin/acpibin
+/usr/bin/acpidump
+/usr/bin/acpiexamples
+/usr/bin/acpiexec
+/usr/bin/acpihelp
+/usr/bin/acpisrc
+/usr/bin/acpixtract
+/usr/bin/iasl
+
+
+9c4a13a08a9b7

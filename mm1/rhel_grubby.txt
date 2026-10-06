@@ -1,0 +1,102 @@
+grubby --info=ALL
+
+#####################################################
+[root@volcano9dee-os amd]# grubby --info=ALL
+index=0
+kernel="/vmlinuz-5.10.134-16.2.an8.x86_64"
+args="ro resume=/dev/mapper/ao_anolis89-swap rd.lvm.lv=ao_anolis89/root rd.lvm.lv=ao_anolis89/swap $tuned_params cgroup.memory=nokmem crashkernel=0M-2G:0M,2G-8G:192M,8G-:256M"
+root="/dev/mapper/ao_anolis89-root"
+initrd="/initramfs-5.10.134-16.2.an8.x86_64.img $tuned_initrd"
+title="Anolis OS (5.10.134-16.2.an8.x86_64) 8"
+id="786caffce0734c02a2729da0bce27a73-5.10.134-16.2.an8.x86_64"
+index=1
+kernel="/vmlinuz-0-rescue-786caffce0734c02a2729da0bce27a73"
+args="ro crashkernel=auto resume=/dev/mapper/ao_anolis89-swap rd.lvm.lv=ao_anolis89/root rd.lvm.lv=ao_anolis89/swap"
+root="/dev/mapper/ao_anolis89-root"
+initrd="/initramfs-0-rescue-786caffce0734c02a2729da0bce27a73.img"
+title="Anolis OS (0-rescue-786caffce0734c02a2729da0bce27a73) 8"
+id="786caffce0734c02a2729da0bce27a73-0-rescue"
+index=2
+kernel="/boot/vmlinuz-5.10.134genoa"
+args="ro crashkernel=auto resume=/dev/mapper/ao_anolis89-swap rd.lvm.lv=ao_anolis89/root rd.lvm.lv=ao_anolis89/swap $tuned_params"
+root="/dev/mapper/ao_anolis89-root"
+initrd="/boot/initramfs-5.10.134genoa.img $tuned_initrd"
+title="Anolis OS (5.10.134genoa) 8.9"
+id="bf999aa54f1f481eb6d2cc466eb8d5c0-5.10.134genoa"
+index=3
+kernel="/boot/vmlinuz-0-rescue-bf999aa54f1f481eb6d2cc466eb8d5c0"
+args="ro crashkernel=auto resume=/dev/mapper/ao_anolis89-swap rd.lvm.lv=ao_anolis89/root rd.lvm.lv=ao_anolis89/swap"
+root="/dev/mapper/ao_anolis89-root"
+initrd="/boot/initramfs-0-rescue-bf999aa54f1f481eb6d2cc466eb8d5c0.img"
+title="Anolis OS (0-rescue-bf999aa54f1f481eb6d2cc466eb8d5c0) 8.9"
+id="bf999aa54f1f481eb6d2cc466eb8d5c0-0-rescue"
+#####################################################
+
+grubby --set-default=/boot/vmlinuz-5.10.134genoa
+
+[root@volcano9dee-os amd]# grubby --default-kernel
+/boot/vmlinuz-5.10.134genoa
+
+
+updating command line:
+
+1. Edit /etc/default/grub
+2. Run grub2-mkconfig -o /boot/efi/EFI/openEuler/grub.cfg  [ for uefi ]
+   or grub2-mkconfig -o /boot/grub2/grub.cfg [ for BIOS]
+
+using grubby:
+
+grubby --update-kernel=ALL --args="bpf=off"
+
+OpenAnolis issue:
+
+After installing RPMs:
+ [ creates symlink /boot/vmlinuz -> /boot/vmlinuz-5.10.134genoa, but the /boot/vmlinuz-5.10.134genoa does NOT
+   have execute permission ]
+[root@volcano9dee-os x86_64]# ls -l /boot/vmli*
+-rwxr-xr-x  1 root root 219988760 May 13 20:33 /boot/vmlinux-5.10.134genoa.bz2
+lrwxrwxrwx  1 root root        27 May 14 22:49 /boot/vmlinuz -> /boot/vmlinuz-5.10.134genoa
+-rwxr-xr-x. 1 root root  11438816 May 13 20:37 /boot/vmlinuz-0-rescue-bf999aa54f1f481eb6d2cc466eb8d5c0
+-rwxr-xr-x. 1 root root  11438816 Mar  4 16:19 /boot/vmlinuz-5.10.134-16.2.an8.x86_64
+-rw-r--r--  1 root root  10119872 May 14 22:49 /boot/vmlinuz-5.10.134genoa
+[root@volcano9dee-os x86_64]# chmod 755 /boot/vmlinuz-5.10.134genoa  [ ==> fix the issue ]
+
+
+Finding & deleting GRUB entries:
+###############################
+
+grubby --info=ALL > /tmp/gg1
+
+index=54
+kernel=/boot/vmlinuz-6.18.0
+args=""
+root=/dev/dm-4
+initrd=/boot/initramfs-6.18.0.img
+title=Anolis OS 23.4 (on /dev/mapper/ao_volcano9dee--hostos-root)
+
+index=55
+kernel=/boot/vmlinuz-6.6.102-5.2.an23.x86_64
+args=""
+root=/dev/dm-4
+initrd=/boot/initramfs-6.6.102-5.2.an23.x86_64.img
+title=Anolis OS 23.4 (on /dev/mapper/ao_volcano9dee--hostos-root)
+
+ grubby --remove-kernel=/boot/vmlinuz-6.18.0
+ grubby --remove-kernel=/boot/vmlinuz-6.6.102-5.2.an23.x86_64
+#############################################################################################
+
+
+
+Checking GRUB2 boot loader version of  ISO file:
+
+#########################################
+~/vol1/iso/velinux$ sudo mount ./2026-08-06_byted-debian-12.10.b1-hwe-u4-amd64-DVD-1.iso /mm1
+
+~/vol1/iso/velinux$ strings /mm1/EFI/boot/grubx64.efi | grep -i grub2
+grub.debian,4,Debian,grub2,2.12-1~bpo12+1,https://tracker.debian.org/pkg/grub2
+grub.debian13,1,Debian,grub2,2.12-1~bpo12+1,https://tracker.debian.org/pkg/grub2   ====>  GRUB2 2.12 version
+....
+.....
+#########################################
+
+

@@ -1,0 +1,16 @@
+
+
+ltrace -ST -p 1679057 -F /lib64 -o /tmp/lt1
+
+
+ltrace -ST -p 11946 -F /lib64 -F /usr/share/edk2/ovmf -o /home/amd/lt1
+
+
+
+[amd@volcano5e33-host ~]$ uname -a
+Linux volcano5e33-host 6.6.25-an231_snp_bp #1 SMP PREEMPT_DYNAMIC Wed Jan  8 10:48:09 IST 2025 x86_64 x86_64 x86_64 GNU/Linux
+[amd@volcano5e33-host ~]$ lscpu | grep MODEL
+[amd@volcano5e33-host ~]$ lscpu | grep -i model
+Model name:                           AMD EPYC 9655 96-Core Processor   ====> EPYC 9655 [ post-GA system ]
+Model:                                2
+[amd@volcano5e33-host ~]$

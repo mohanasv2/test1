@@ -1,0 +1,81 @@
+
+
+Tracing the guest from Host using "perf"
+
+1. perf list | grep kvm   => shoul dlist KVM trace entries
+#####
+
+[root@volcano99fc-os perf]# perf list | grep kvm
+  kvm:kvm_ack_irq                                    [Tracepoint event]
+  kvm:kvm_age_page                                   [Tracepoint event]
+  kvm:kvm_apic                                       [Tracepoint event]
+  kvm:kvm_apic_accept_irq                            [Tracepoint event]
+  kvm:kvm_apic_ipi                                   [Tracepoint event]
+  kvm:kvm_async_pf_completed                         [Tracepoint event]
+  kvm:kvm_async_pf_doublefault                       [Tracepoint event]
+  kvm:kvm_async_pf_not_present                       [Tracepoint event]
+  kvm:kvm_async_pf_ready                             [Tracepoint event]
+  kvm:kvm_avic_incomplete_ipi                        [Tracepoint event]
+  kvm:kvm_avic_unaccelerated_access                  [Tracepoint event]
+  kvm:kvm_cpuid                                      [Tracepoint event]
+  kvm:kvm_cr                                         [Tracepoint event]
+  kvm:kvm_emulate_insn                               [Tracepoint event]
+  kvm:kvm_enter_smm                                  [Tracepoint event]
+  kvm:kvm_entry                                      [Tracepoint event]
+  kvm:kvm_eoi                                        [Tracepoint event]
+  kvm:kvm_exit                                       [Tracepoint event]
+  kvm:kvm_fast_mmio                                  [Tracepoint event]
+  kvm:kvm_fpu                                        [Tracepoint event]
+  kvm:kvm_halt_poll_ns                               [Tracepoint event]
+  kvm:kvm_hv_flush_tlb                               [Tracepoint event]
+  kvm:kvm_hv_flush_tlb_ex                            [Tracepoint event]
+  kvm:kvm_hv_hypercall                               [Tracepoint event]
+  kvm:kvm_hv_notify_acked_sint                       [Tracepoint event]
+  kvm:kvm_hv_send_ipi                                [Tracepoint event]
+  kvm:kvm_hv_send_ipi_ex                             [Tracepoint event]
+  kvm:kvm_hv_stimer_callback                         [Tracepoint event]
+  kvm:kvm_hv_stimer_cleanup                          [Tracepoint event]
+  kvm:kvm_hv_stimer_expiration                       [Tracepoint event]
+  kvm:kvm_hv_stimer_set_config                       [Tracepoint event]
+  kvm:kvm_hv_stimer_set_count                        [Tracepoint event]
+  kvm:kvm_hv_stimer_start_one_shot                   [Tracepoint event]
+  kvm:kvm_hv_stimer_start_periodic                   [Tracepoint event]
+  kvm:kvm_hv_synic_send_eoi                          [Tracepoint event]
+  kvm:kvm_hv_synic_set_irq                           [Tracepoint event]
+  kvm:kvm_hv_synic_set_msr                           [Tracepoint event]
+  kvm:kvm_hv_timer_state                             [Tracepoint event]
+  kvm:kvm_hypercall                                  [Tracepoint event]
+  kvm:kvm_inj_exception                              [Tracepoint event]
+  kvm:kvm_inj_virq                                   [Tracepoint event]
+  kvm:kvm_invlpga                                    [Tracepoint event]
+  kvm:kvm_ioapic_delayed_eoi_inj                     [Tracepoint event]
+  kvm:kvm_ioapic_set_irq                             [Tracepoint event]
+  kvm:kvm_mmio                                       [Tracepoint event]
+  kvm:kvm_msi_set_irq   
+####
+
+2. perf command:
+
+   sudo ./perf stat -e 'kvm:kvm_entry' -e 'kvm:kvm_exit' -a sleep 1
+   sudo ./perf stat -e 'kvm:*' -a sleep 1
+
+
+3. ftrace:
+# mount -t debugfs none /sys/kernel/debug
+# echo 1 >/sys/kernel/debug/tracing/events/kvm/enable
+# cat /sys/kernel/debug/tracing/trace_pipe
+[...]
+             kvm-5664  [000] 11906.220178: kvm_entry: vcpu 0
+             kvm-5664  [000] 11906.220181: kvm_exit: reason apic_access rip 0xc011518c
+             kvm-5664  [000] 11906.220183: kvm_mmio: mmio write len 4 gpa 0xfee000b0 val 0x0
+             kvm-5664  [000] 11906.220183: kvm_apic: apic_write APIC_EOI = 0x0
+             kvm-5664  [000] 11906.220184: kvm_ack_irq: irqchip IOAPIC pin 11
+             kvm-5664  [000] 11906.220185: kvm_entry: vcpu 0
+             kvm-5664  [000] 11906.220188: kvm_exit: reason io_instruction rip 0xc01e4473
+             kvm-5664  [000] 11906.220188: kvm_pio: pio_read at 0xc13e size 2 count 1
+             kvm-5664  [000] 11906.220193: kvm_entry: vcpu 0
+
+# echo 0 >/sys/kernel/debug/tracing/events/kvm/enable
+
+Host IP 10.86.18.84 [ volcano9b0c-os ]
+BMC IP: volcano-9B0C.amd.com  	10.86.20.144  	root/0penBmc   https://volcano-9B0C.amd.com

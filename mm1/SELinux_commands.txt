@@ -1,0 +1,11 @@
+Enabling 8088 port for httpd:
+
+[root@volcano99fc-os amd]# semanage port -l | grep 8088
+[root@volcano99fc-os amd]# semanage port -a -t http_port_t -p tcp 8088
+[root@volcano99fc-os amd]# semanage port -l | grep 8088
+http_port_t                    tcp      8088, 80, 81, 443, 488, 8008, 8009, 8443, 9000
+
+
+ xtigervncviewer -SecurityTypes VncAuth -passwd /home/amd/.vnc/passwd :1
+
+ xtigervncviewer -SecurityTypes VncAuth -passwd /home/amd/.vnc/passwd 10.138.194.212:1

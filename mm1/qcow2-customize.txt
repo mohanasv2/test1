@@ -1,0 +1,44 @@
+To change the root password in a qcow2 image, use the virt-customize tool from the {Link: libguestfs-tools https://nanibot.net/posts/root-password-qcow2/} package. The fastest method is running: sudo virt-customize -a <image>.qcow2 --root-password password:<new_password>. Ensure the image is not in use, and consider setting up an SSH key instead of a password for better
+
+
+1. download cloud image from : https://cloud-images.ubuntu.com/jammy/20250207/
+  
+ https://cloud-images.ubuntu.com/jammy/20250207/jammy-server-cloudimg-arm64.img
+
+2. create a dummy arm64 vm using virt-manager [ during install it will hang, now shutdown it ]
+
+3. replace the qcow2 image in the dummy arm vm's xml file, with the downloaded jammy-server-cloudimg-arm64.img.
+
+[ before using the cloud image, set the root password in the image as below ]
+
+virt-customize -a jammy-server-cloudimg-arm64-2.img --root-password password:amd1234
+
+[ run as root user ]
+amd@dbc5pt3-os:~/vol2/images$ sudo virt-customize -a jammy-server-cloudimg-arm64-2.img --root-password password:amd1234
+[   0.0] Examining the guest ...
+[   8.2] Setting a random seed
+[   8.2] Setting passwords
+[   9.2] Finishing off
+amd@dbc5pt3-os:~/vol2/images$
+sudo
+
+unxz openEuler-24.03-LTS-SP3-aarch64.qcow2.xz
+
+sudo virt-customize -a openEuler-24.03-LTS-SP3-aarch64.qcow2 --root-password password:amd1234!
+
+/backport_team/images/openEuler-24.03-LTS-SP3-aarch64.qcow2
+
+
+Setting md5/SHA  encrypted root passwd:
+########################################
+
+sudo virt-customize   -a cloudos94-vm2.qcow2   --root-password password:amd1234   --password-crypto sha512
+
+amd@rag-poc:/backport_team/images$ sudo virt-customize -a cloudos94-vm2.qcow2 --root-password password:amd1234 --password-crypto sha512
+[   0.0] Examining the guest ...
+[  14.1] Setting a random seed
+[  14.1] Setting passwords
+[  15.8] SELinux relabelling
+[  15.9] Finishing off
+amd@rag-poc:/backport_team/images$
+

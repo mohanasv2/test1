@@ -1,0 +1,214 @@
+
+
+CONFIG_BPF=y
+CONFIG_HAVE_EBPF_JIT=y
+CONFIG_BPF_SYSCALL=y
+CONFIG_BPF_JIT=y
+CONFIG_BPF_JIT_ALWAYS_ON=y
+CONFIG_BPF_JIT_DEFAULT_ON=y
+CONFIG_BPF_UNPRIV_DEFAULT_OFF=y
+CONFIG_BPF_LSM=y
+CONFIG_CGROUP_BPF=y
+CONFIG_BPF_STREAM_PARSER=y
+CONFIG_LWTUNNEL_BPF=y
+CONFIG_BPF_EVENTS=y
+CONFIG_BPF_KPROBE_OVERRIDE=y
+CONFIG_DEBUG_INFO_BTF=y
+CONFIG_NETFILTER_XT_MATCH_BPF=m
+CONFIG_NET_CLS_BPF=m
+CONFIG_NET_ACT_BPF=m
+for debug kernels, the following additional option is set (to help run BPF selftests):
+
+CONFIG_TEST_BPF=m
+
+
+By default above build config are set in Linux kernel >=4.18
+
+
+Creating & running "bpf" program:
+
+[ web site: https://eunomia.dev/tutorials/1-helloworld/#installing-the-necessary-software-and-tools ]
+
+Download the ecli tool for running eBPF programs:
+$ wget https://aka.pw/bpf-ecli -O ecli && chmod +x ./ecli
+$ ./ecli -h
+Usage: ecli [--help] [--version] [--json] [--no-cache] url-and-args
+
+Download the compiler toolchain for compiling eBPF kernel code into config files or WASM modules:
+$ 
+
+wget https://github.com/eunomia-bpf/eunomia-bpf/releases/latest/download/ecc && chmod +x ./ecc
+$ ./ecc -h
+eunomia-bpf compiler
+Usage: ecc [OPTIONS] <SOURCE_PATH> [EXPORT_EVENT_HEADER]
+
+sudo apt install clang llvm
+
+program:
+[root@volcano99fc-os bpf_programs]# cat sample_bpf1.c
+/* SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause) */
+#define BPF_NO_GLOBAL_DATA
+#include <linux/bpf.h>
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_tracing.h>
+
+typedef unsigned int u32;
+typedef int pid_t;
+const pid_t pid_filter = 0;
+
+char LICENSE[] SEC("license") = "Dual BSD/GPL";
+
+SEC("tp/syscalls/sys_enter_write")
+int handle_tp(void *ctx)
+{
+ pid_t pid = bpf_get_current_pid_tgid() >> 32;
+ if (pid_filter && pid != pid_filter)
+  return 0;
+ bpf_printk("BPF triggered sys_enter_write from PID %d.\n", pid);
+ return 0;
+}
+
+
+
+compiling:
+
+[root@volcano99fc-os bpf_programs]# ./ecc ./sample_bpf1.c
+INFO [ecc_rs::bpf_compiler] Compiling bpf object...
+INFO [ecc_rs::bpf_compiler] Generating package json..
+INFO [ecc_rs::bpf_compiler] Packing ebpf object and config into ./package.json...
+[root@volcano99fc-os bpf_programs]# ls
+ecc  ecli  package.json  sample_bpf1.bpf.o  sample_bpf1.c  sample_bpf1.skel.json
+[root@volcano99fc-os bpf_programs]#
+
+
+ run the compiled program using ecli:
+ sudo ./ecli run package.json
+
+to see the outut:
+sudo cat /sys/kernel/debug/tracing/trace_pipe | grep "BPF triggered sys_enter_write"
+
+BCC [ Bpf Compiler Collection ]
+
+sudo apt-get install -y bpfcc-tools libbpfcc libbpfcc-dev linux-headers-$(uname -r)
+
+
+program 2:
+#include "vmlinux.h"
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_tracing.h>
+#include <bpf/bpf_core_read.h>
+
+char LICENSE[] SEC("license") = "Dual BSD/GPL";
+SEC("kprobe/do_unlinkat")
+int BPF_KPROBE(do_unlinkat, int dfd, struct filename *name)
+{
+    pid_t pid;
+    const char *filename;
+
+    pid = bpf_get_current_pid_tgid() >> 32;
+    filename = BPF_CORE_READ(name, name);
+    bpf_printk("KPROBE ENTRY pid = %d, filename = %s\n", pid, filename);
+    return 0;
+}
+
+SEC("kretprobe/do_unlinkat")
+int BPF_KRETPROBE(do_unlinkat_exit, long ret)
+{
+    pid_t pid;
+
+    pid = bpf_get_current_pid_tgid() >> 32;
+    bpf_printk("KPROBE EXIT: pid = %d, ret = %ld\n", pid, ret);
+    return 0;
+}
+
+
+kernel/bpf-rvi/common_kfuncs.c
+
+Building:
+
+config BPF_RVI
+        bool "Resource View Isolation with BPF"
+        depends on BPF_EVENTS
+        depends on BPF_SYSCALL
+        depends on BPF_JIT
+        depends on CPUSETS
+        depends on PID_NS
+        select BPF_RVI_BLK_BFQ if IOSCHED_BFQ = y # built-in required
+        default n
+
+
+1. Build kernel
+2. cd tools/lib/bpf; make all
+3. make M=samples/bpf [ from kernel base dir ]
+4. clang -O2 -g -target bpf -c bpf_rvi/bpf_rvi_meminfo.bpf.c -o bpf_rvi_meminfo.bpf.o -I./
+5. Install the built kernel
+6. sudo mount -t bpf bpf /sys/fs/bpf
+7. sudo bpftool prog load bpf_rvi_meminfo.bpf.o /sys/fs/bpf/rvi_meminfo
+8. sudo bpftool prog show pinned /sys/fs/bpf/rvi_meminfo
+9. bpftool prog dump xlated pinned /sys/fs/bpf/rvi_meminfo | grep SEC
+
+
+[root@volcano9dee-host bpf]# sudo bpftool prog load bpf_rvi_meminfo.bpf.o /sys/fs/bpf/rvi_meminfo
+libbpf: prog 'dump_meminfo': relo #23: insn #134 (LDX/ST/STX) accesses field incorrectly. Make sure you are accessing pointers, unsigned integers, or fields of matching type and size.
+libbpf: prog 'dump_meminfo': BPF program load failed: Invalid argument
+libbpf: prog 'dump_meminfo': -- BEGIN PROG LOAD LOG --
+reg type unsupported for arg#0 function dump_meminfo#9
+0: R1=ctx(off=0,imm=0) R10=fp0
+; struct seq_file *m = ctx->meta->seq;
+0: (79) r1 = *(u64 *)(r1 +0)
+
+
+[root@volcano9dee-host bpf]# bpftool prog dump xlated pinned /sys/fs/bpf/rvi_meminfo | grep NR
+; BPF_SEQ_PRINTF(m, "SwapCached:         %8llu kB\n", KB(memcg_page_state(memcg, NR_SWAPCACHE)));
+; BPF_SEQ_PRINTF(m, "Dirty:              %8llu kB\n", KB(memcg_page_state(memcg, NR_FILE_DIRTY)));
+; BPF_SEQ_PRINTF(m, "Writeback:          %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK)));
+; BPF_SEQ_PRINTF(m, "AnonPages:          %8llu kB\n", KB(memcg_page_state(memcg, NR_ANON_MAPPED)));
+; BPF_SEQ_PRINTF(m, "Mapped:             %8llu kB\n", KB(memcg_page_state(memcg, NR_FILE_MAPPED)));
+; BPF_SEQ_PRINTF(m, "Shmem:              %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM)));
+; BPF_SEQ_PRINTF(m, "Shmem:              %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM)));
+; BPF_SEQ_PRINTF(m, "Shmem:              %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM)));
+; BPF_SEQ_PRINTF(m, "Shmem:              %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM)));
+; BPF_SEQ_PRINTF(m, "Shmem:              %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM)));
+; BPF_SEQ_PRINTF(m, "KernelStack:        %8llu kB\n", memcg_page_state(memcg, NR_KERNEL_STACK_KB));
+; BPF_SEQ_PRINTF(m, "PageTables:         %8llu kB\n", KB(memcg_page_state(memcg, NR_PAGETABLE)));
+; BPF_SEQ_PRINTF(m, "SecPageTables       %8llu kB\n", KB(memcg_page_state(memcg, NR_SECONDARY_PAGETABLE)));
+; BPF_SEQ_PRINTF(m, "SecPageTables       %8llu kB\n", KB(memcg_page_state(memcg, NR_SECONDARY_PAGETABLE)));
+; BPF_SEQ_PRINTF(m, "SecPageTables       %8llu kB\n", KB(memcg_page_state(memcg, NR_SECONDARY_PAGETABLE)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "WritebackTmp:       %8llu kB\n", KB(memcg_page_state(memcg, NR_WRITEBACK_TEMP)));
+; BPF_SEQ_PRINTF(m, "AnonHugePages:      %8llu kB\n", KB(memcg_page_state(memcg, NR_ANON_THPS) *
+; BPF_SEQ_PRINTF(m, "ShmemHugePages:     %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM_THPS) *
+; BPF_SEQ_PRINTF(m, "ShmemPmdMapped:     %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM_PMDMAPPED) *
+; BPF_SEQ_PRINTF(m, "ShmemPmdMapped:     %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM_PMDMAPPED) *
+; BPF_SEQ_PRINTF(m, "ShmemPmdMapped:     %8llu kB\n", KB(memcg_page_state(memcg, NR_SHMEM_PMDMAPPED) *
+[root@volcano9dee-host bpf]#
+
+Kernel with backported patches (no recompilation of bpf_rvi/bpf_rvi_meminfo.bpf.c )
+
+
+
+
+
+
+[root@volcano9dee-host bpf]# ls /sys/fs/bpf/rvi_meminfo
+/sys/fs/bpf/rvi_meminfo
+[root@volcano9dee-host bpf]# file /sys/fs/bpf/rvi_meminfo
+/sys/fs/bpf/rvi_meminfo: empty
+[root@volcano9dee-host bpf]# bpftool prog show pinned /sys/fs/bpf/rvi_meminfo
+6: tracing  name dump_meminfo  tag c3d42190e4b7a171  gpl
+        loaded_at 2026-05-13T17:49:24+0530  uid 0
+        xlated 7320B  jited 6454B  memlock 8192B  map_ids 3,4
+        btf_id 121
+[root@volcano9dee-host bpf]# bpftool prog show pinned /sys/fs/bpf/rvi_meminfo
+6: tracing  name dump_meminfo  tag c3d42190e4b7a171  gpl
+        loaded_at 2026-05-13T17:49:24+0530  uid 0
+        xlated 7320B  jited 6454B  memlock 8192B  map_ids 3,4
+        btf_id 121
+
+The following PR requires rebasing (behind 800+ patches to the latest tip) & we will rebase and resubmit it [ eventhough it does not show any merge conflicts in the current PR). Please inform the reviewer about this. If 
+https://atomgit.com/openeuler/kernel/pull/22049

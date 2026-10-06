@@ -1,0 +1,181 @@
+KVM installation:
+
+Ubuntu:
+#################################
+ sudo apt-get install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager
+
+  ARM:
+    sudo apt install qemu-system-aarch64 qemu-efi-aarch64 libvirt-daemon-system virt-manager
+
+  Note:
+   If virt-manager not connecting, check the following:
+   sudo usermod -aG libvirt $(whoami)
+   systemctl status virtqemud
+   sudo systemctl enable --now virtqemud.socket
+   sudo systemctl enable --now virtqemud.service
+
+   disable selinux: sudo setenforce 0
+###################################
+
+
+
+CentOS/RHEL/OpencloudOS/Anolis/Euler:
+############################################
+sudo yum -y install qemu qemu-kvm edk2-ovmf libvirt  virt-install virt-manager xauth mesa-dri-drivers virt-manager libvirt*[ libguestfs-tools / libguestfs-appliance ]
+
+## sudo yum remove -y xauth remove  qemu qemu-kvm libvirt  virt-install virt-manager libguestfs-tools
+Start the libvirtd service:
+  sudo systemctl enable libvirtd
+  sudo systemctl start libvirtd
+  sudo systemctl stop libvirtd
+
+Make sure KVM module loaded:
+  sudo lsmod | grep -i kvm
+
+Note:
+To change qemu version:
+ 1) uninstall the current qemu [ will removw all dependencies ]
+ 2) install your build qemu
+ 3)  run: sudo yum -y install  libvirt libguestfs-tools virt-install virt-manager
+  
+
+Configure bridge using nmcli command & configure KVM netwotking
+############################################################
+
+Also check sshd option to virt-manager to work:
+
+checking: /etc/ssh/ssh_config
+Code:
+ForwardAgent yes
+ForwardX11 yes
+ForwardX11Trusted yes
+checking: /etc/ssh/sshd_config for
+Code:
+X11Forwarding yes
+X11DisplayOffset 10
+X11UseLocalHost yes
+UseLogin no
+PasswordAuthentication  yes
+
+restart sshd: service sshd restart
+
+Dma$1234!
+
+create empty qemu disk:
+
+qemu-img create -f qcow2 /vms/images/centos85-1.qcow2 64G
+
+qemu-img create -f qcow2 /home/amd/vol1/images/mohandev.qcow2 128G [ 10.138.192.128]
+
+VM disk resize:
+
+from Host:
+
+stop the VM first
+# getting the path of the VMs image file
+ sudo virsh domblklist mohandev
+
+# get more info on thee VM image file
+  sudo qemu-img info /var/lib/libvirt/images/mohandev.qcow2
+
+# getting the snapshots of the VM
+ sudo virsh snapshot-list mohandev
+
+# delete any snapshots using below cmd:
+ sudo virsh snapshot-delete
+
+#resizing the VMs image file
+ sudo qemu-img resize /var/lib/libvirt/images/mohandev.qcow2 +100G
+
+# run info on the image
+ sudo qemu-img info /var/lib/libvirt/images/mohandev.qcow2  => will show the new size
+
+Now start the VM 
+
+from VM:
+
+run lsblk  & check whether new size reflects . And also find the LV/partition hosting the root FS
+
+sudo lsblk  => check partition, which you want to increase [ normally the one hosts /root FS ]
+
+sudo growpart /dev/vda 3   // increase partition size
+
+sudo pvresize /dev/vda3    // increases PV size
+
+sudo lvextend -r -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv  // extend LV hosting the root
+
+sudo resize2fs  /dev/mapper/ubuntu--vg-ubuntu--lv 
+
+## getting xml dump of a VM
+ To obtain the XML configuration of a VM, use the virsh dumpxml command.
+
+## resizing the VM
+sudo qemu-img resize --shrink /var/lib/libvirt/images/[operating sys filename].qcow2 20G
+
+# empty qemu image 
+qemu-img create -o 'preallocation=metadata' -f qcow2 ubunt2204_clone.qcow2 128G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /home/amd/vol3/images/ubunt2204_test1.qcow2 16G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/anolis231-1.qcow2  64G
+
+amd@volcano9dee-os:~$ dpkg -S /usr/bin/qemu-system-x86_64
+qemu-system-x86: /usr/bin/qemu-system-x86_64
+
+[root@volcano9f8e-oshost qemu-6.2.0]# rpm -qf /usr/libexec/qemu-kvm
+qemu-6.2.0-91.oe2203sp3.x86_64
+
+Emulators:
+ubuntu: /usr/bin/qemu-system-x86_64
+CloudOS: /usr/libexec/qemu-kvm
+
+ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-system-x86_64
+
+/usr/local/bin/qemu-x86_64
+
+ rpm2cpio php-5.1.4-1.esp1.x86_64.rpm | cpio -idmv
+
+checking host validation for KVM:
+
+virt-host-validate
+
+
+UEFI_nosev
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/ubuntu2404_nosev1.qcow2  32G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/anolis231_uefi_nosev1.qcow2  32G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/euler2403_nosev1.qcow2  32G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/cloudos9_nosev1.qcow2  32G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/centos_uefi_nosev1.qcow2  32G
+
+
+
+Bios VMs:
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/ubuntu2204_bios.qcow2  64G
+
+qemu-img create -o 'preallocation=metadata' -f qcow2 /vms/images/anolis231_bios1.qcow2  32G
+
+
+http://mirrors.openanolis.cn/anolis/8.10/kernel-5.10/x86_64/os/
+
+http://mirrors.openanolis.cn/anolis/23.1/os/x86_64/os/
+
+155.102.54.136  mirrors.openanolis.cn
+
+[root@venice-hostos amd]# efibootmgr | grep -i anolis
+Boot0016* anolis        HD(1,GPT,d247142f-5bfe-4bb6-acf8-4e1fc31957a4,0x800,0x100000)/File(\EFI\anolis\shimx64.efi)
+Boot0019* Anolis OS     HD(1,GPT,ce8260cf-df00-4e79-973f-53925ee56fcf,0x800,0x4789800)/File(\EFI\anolis\shimx64.efi)
+
+
+[amd@venice-hostos ~]$ uname -a
+Linux venice-hostos 5.10.134-19.6.an8.x86_64 #1 SMP Wed May 27 14:20:54 CST 2026 x86_64 x86_64 x86_64 GNU/Linux
+[amd@venice-hostos ~]$ efibootmgr | grep Anolis
+Boot0019* Anolis OS     HD(1,GPT,ce8260cf-df00-4e79-973f-53925ee56fcf,0x800,0x4789800)/File(\EFI\anolis\shimx64.efi)
+[amd@venice-hostos ~]$ efibootmgr | grep -i order
+BootOrder: 0019,0016,0018,0017,0015,0015,0016,0017,0016,0001,0000,0002,0003,0004,0005,0006,0007,0008,0009,000A,000B,000C,000D,000E,000F,0010,0011,0012
+[amd@venice-hostos ~]$
+
+IP:10.216.177.227

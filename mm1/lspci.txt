@@ -1,0 +1,124 @@
+
+[amd@volcano9f8e-oshost ~]$ lspci -vvv | grep "Encryp"
+55:00.5 Encryption controller: Advanced Micro Devices, Inc. [AMD] Device 156e
+d1:00.5 Encryption controller: Advanced Micro Devices, Inc. [AMD] Device 156e
+[amd@volcano9f8e-oshost ~]$
+
+[amd@volcano9f8e-oshost ~]$ uname -a
+Linux volcano9f8e-oshost 4.18.0-348.el8.x86_64 #1 SMP Tue Oct 19 15:14:17 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+
+[amd@volcano9f8e-oshost ~]$ sudo lspci -vvv -s 55:00.5
+55:00.5 Encryption controller: Advanced Micro Devices, Inc. [AMD] Device 156e
+        Subsystem: Advanced Micro Devices, Inc. [AMD] Device 14ca
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin D routed to IRQ 255
+        NUMA node: 0
+        IOMMU group: 23
+        Region 2: Memory at d9300000 (32-bit, non-prefetchable) [disabled] [size=1M]
+        Region 5: Memory at d9400000 (32-bit, non-prefetchable) [disabled] [size=8K]
+        Capabilities: [48] Vendor Specific Information: Len=08 <?>
+        Capabilities: [50] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [64] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0.000W
+                DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 32GT/s, Width x16, ASPM L0s L1, Exit Latency L0s <64ns, L1 <1us
+                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
+                LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 32GT/s (ok), Width x16 (ok)
+                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR-
+                         10BitTagComp+ 10BitTagReq- OBFF Not Supported, ExtFmt+ EETLPPrefix+, MaxEETLPPrefixes 1
+                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+                         FRS- TPHComp- ExtTPHComp-
+                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- OBFF Disabled,
+                         AtomicOpsCtl: ReqEn-
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete- EqualizationPhase1-
+                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+                         Retimer- 2Retimers- CrosslinkRes: unsupported
+        Capabilities: [a0] MSI: Enable- Count=1/2 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [c0] MSI-X: Enable- Count=2 Masked-
+                Vector table: BAR=5 offset=00000000
+                PBA: BAR=5 offset=00001000
+        Capabilities: [100 v1] Vendor Specific Information: ID=0001 Rev=1 Len=010 <?>
+        Capabilities: [328 v1] Alternative Routing-ID Interpretation (ARI)
+                ARICap: MFVC- ACS-, Next Function: 0
+                ARICtl: MFVC- ACS-, Function Group: 0
+        Capabilities: [370 v1] Transaction Processing Hints
+                Interrupt vector mode supported
+                Device specific mode supported
+                Steering table in MSI-X table
+
+[amd@volcano9f8e-oshost ~]$
+
+
+Genoa:
+[amd@volcano99fc-os ~]$ uname -a
+Linux volcano99fc-os 5.4.32-1_tcloud_test #1 SMP Wed Jul 31 12:28:34 IST 2024 x86_64 x86_64 x86_64 GNU/Linux
+[amd@volcano99fc-os ~]$  lspci -vvv | grep "Encryp"
+libkmod: kcmdline_parse_result: Ignoring bad option on kernel command line while parsing module name: 'ivrs_acpihid[BB:DD'
+02:00.5 Encryption controller: Advanced Micro Devices, Inc. [AMD] Device 14ca
+81:00.5 Encryption controller: Advanced Micro Devices, Inc. [AMD] Device 14ca
+[amd@volcano99fc-os ~]$  sudo lspci -vvv -s 02:00.5
+[sudo] password for amd:
+02:00.5 Encryption controller: Advanced Micro Devices, Inc. [AMD] Device 14ca
+        Subsystem: Advanced Micro Devices, Inc. [AMD] Device 14ca
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin D routed to IRQ 26
+        NUMA node: 0
+        IOMMU group: 29
+        Region 2: Memory at fc000000 (32-bit, non-prefetchable) [size=1M]
+        Region 5: Memory at fc200000 (32-bit, non-prefetchable) [size=8K]
+        Capabilities: [48] Vendor Specific Information: Len=08 <?>
+        Capabilities: [50] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [64] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0.000W
+                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+ FLReset-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 32GT/s, Width x16, ASPM L0s L1, Exit Latency L0s <64ns, L1 <1us
+                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
+                LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 32GT/s (ok), Width x16 (ok)
+                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR-
+                         10BitTagComp+ 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
+                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+                         FRS- TPHComp- ExtTPHComp-
+                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- OBFF Disabled,
+                         AtomicOpsCtl: ReqEn-
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete- EqualizationPhase1-
+                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+                         Retimer- 2Retimers- CrosslinkRes: unsupported
+        Capabilities: [a0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [c0] MSI-X: Enable+ Count=2 Masked-
+                Vector table: BAR=5 offset=00000000
+                PBA: BAR=5 offset=00001000
+        Capabilities: [100 v1] Vendor Specific Information: ID=0001 Rev=1 Len=010 <?>
+        Capabilities: [328 v1] Alternative Routing-ID Interpretation (ARI)
+                ARICap: MFVC- ACS-, Next Function: 0
+                ARICtl: MFVC- ACS-, Function Group: 0
+        Capabilities: [370 v1] Transaction Processing Hints
+                Device specific mode supported
+                Steering table in MSI-X table
+        Kernel driver in use: ccp
+libkmod: kcmdline_parse_result: Ignoring bad option on kernel command line while parsing module name: 'ivrs_acpihid[BB:DD'
+        Kernel modules: ccp

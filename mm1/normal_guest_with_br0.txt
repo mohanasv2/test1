@@ -1,0 +1,14 @@
+/usr/bin/qemu-kvm \
+        -enable-kvm \
+        -machine q35 -smp 4 \
+        -m 8G \
+        -no-reboot \
+        -drive if=pflash,format=raw,unit=0,file=/usr/share/edk2/ovmf/OVMF_CODE.fd,readonly=on \
+        -drive if=pflash,format=raw,unit=1,file=/usr/share/edk2/ovmf/OVMF_VARS.fd \
+        -drive file=/vms/images/mm2.qcow2,if=none,id=disk0,format=qcow2 \
+        -device virtio-scsi-pci,id=scsi0,disable-legacy=on,iommu_platform=true \
+        -device scsi-hd,drive=disk0 \
+        -vga std -vnc :1 \
+        -drive file=/vms/iso/openEuler-22.03-LTS-SP3-x86_64-dvd.iso,media=cdrom,index=0 \
+        -netdev bridge,id=vmnic,br=br0 -device virtio-net-pci,netdev=vmnic \
+[root@volcano9dee-host mohan]#

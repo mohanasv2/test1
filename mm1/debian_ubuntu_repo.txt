@@ -1,0 +1,34 @@
+Location:
+
+/etc/apt
+
+file: sources.list
+
+ubuntu:
+amd@mohandev:/etc/apt$ cat /etc/apt/sources.list.d/ubuntu.sources
+Types: deb
+URIs: http://in.archive.ubuntu.com/ubuntu/
+Suites: noble noble-updates noble-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://security.ubuntu.com/ubuntu/
+Suites: noble-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+amd@mohandev:/etc/apt$
+ 
+Debian:
+
+amd@volcano9dee-host:/etc/apt$ cat /etc/apt/sources.list
+#deb cdrom:[veLinux GNU/Linux 2.1 _Lyra_ - Unofficial amd64 DVD Binary-1 with firmware 20241112-02:13]/ lyra main
+
+deb http://mirrors.linode.com/debian bookworm main
+deb-src http://mirrors.linode.com/debian bookworm main
+
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free
+deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free
+
+
+

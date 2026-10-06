@@ -1,0 +1,16 @@
+
+ sudo ipmitool user list 1
+
+ sudo ipmitool user set password 1 'amd1234!'
+
+## get configuration info:
+[ sudo apt install freeipmi-tools ]
+
+sudo ipmi-config --checkout
+
+Rebooting openBMC:
+
+ipmitool -I lanplus -H 10.216.177.220 -U root -P 0penBmc mc reset warm [ or login to BMC & run "reboot" ]
+
+
+

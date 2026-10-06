@@ -1,0 +1,14 @@
+/etc/systemd/journald.conf
+Storage=persistent
+systemctl restart systemd-journald
+
+
+
+watch dog:
+
+wdctl /dev/watchdog0
+
+
+wdctl
+systemctl show | grep Watchdog
+cat /proc/cmdline

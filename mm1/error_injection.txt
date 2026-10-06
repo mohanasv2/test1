@@ -1,0 +1,24 @@
+
+web site: https://stackoverflow.com/questions/38496643/how-can-we-generate-mcemachine-check-errors
+
+[root@volcano9b0c-os test]# rpm -qf /usr/sbin/mce-inject
+mcelog-196-2.oe2403.x86_64
+
+sudo modprobe mce_inject
+
+
+$ git clone https://github.com/andikleen/mce-inject.git
+$ sudo apt-get install flex bison
+$ cd mce-inject
+
+$ sudo ./mce-inject test/corrected
+
+mce-test:
+
+git clone git://git.kernel.org/pub/scm/utils/cpu/mce/mce-test.git
+  https://git.kernel.org/pub/scm/utils/cpu/mce/mce-test.git
+
+cases/function/apei-inj/
+
+
+modprobe einj.ko

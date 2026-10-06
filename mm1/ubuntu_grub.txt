@@ -1,0 +1,74 @@
+Configuration files:
+
+ /etc/default/grub
+
+/boot/grub/grub.cfg
+
+command: grubby
+
+dpkg -i <image pkg> => installs the Linux new image and adds entry to the "grub.cfg"
+
+dpkg -r <image pkg> => removes the Linux new image and deletes entry to the "grub.cfg"
+
+
+https://10.138.172.245/restgui/index.html?085fd86fc0a52337c8016c795a8dca6d#/
+
+
+
+Changing / selecting the kernel versions from the grub.cfg:
+
+Find entrance from /boot/grub/grub.cfg
+Get the $menuentry_id_option:
+grep submenu /boot/grub/grub.cfg
+Example output:
+submenu 'Advanced options for Ubuntu' $menuentry_id_option 'gnulinux-advanced-4591a659-55e2-4bec-8dbe-d98bd9e489cf' {
+'gnulinux-advanced-4591a659-55e2-4bec-8dbe-d98bd9e489cf' is what we need.
+
+Get the specific kernel option:
+grep gnulinux-4.15.0 /boot/grub/grub.cfg
+Example output:
+menuentry 'Ubuntu, with Linux 4.15.0-126-generic' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-4.15.0-126-generic-advanced-4591a659-55e2-4bec-8dbe-d98bd9e489cf' {
+'gnulinux-4.15.0-126-generic-advanced-4591a659-55e2-4bec-8dbe-d98bd9e489cf' is what we need.
+
+Set GRUB_DEFAULT in /etc/default/grub
+Join two entry strings obtained above by '>', set to GRUB_DEFAULT.
+GRUB_DEFAULT='gnulinux-advanced-4591a659-55e2-4bec-8dbe-d98bd9e489cf>gnulinux-4.15.0-126-generic-advanced-4591a659-55e2-4bec-8dbe-d98bd9e489cf'
+
+ our example:  GRUB_DEFAULT='gnulinux-advanced-eb94dee8-ebf5-40ed-9753-bb9838680938>gnulinux-6.2.0-39-generic-advanced-eb94dee8-ebf5-40ed-9753-bb9838680938'
+
+Update grub
+  sudo update-grub
+
+Reboot the machine
+ sudo reboot
+
+
+https://gist.github.com/chaiyujin/c08e59752c3e238ff3b1a5098322b363   [ 1>1 ]
+changing boot order using /etc/default/grub file entries:
+
+
+GRUB_DEFAULT="1>2"            ====> 1-> submenu's level & 2 -> menu entry inside submenu [ in /boot/grub/grub.cfg]
+GRUB_TIMEOUT_STYLE=hidden
+GRUB_TIMEOUT=0
+GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+GRUB_CMDLINE_LINUX=""
+
+https://help.ubuntu.com/community/Grub2/Setup#:~:text=Any%20changes%20made%20directly%20to,in%20the%20%2Fetc%2Fgrub.
+
+Pavan, installed the latest firmware bundle, but it does have 0x0AA00216 version. 
+
+amd@volcano9f6e-hostos:~$ lscpu | grep -e "amily" -e "odel" -e "tepping"
+Model name:                           AMD EPYC 9B24 128-Core Processor
+CPU family:                           25
+Model:                                160
+Stepping:                             1
+amd@volcano9f6e-hostos:~$ nproc
+512
+
+amd@volcano9f6e-hostos:~$ sudo dmesg | grep microcode
+[    5.412845] microcode: Current revision: 0x0aa00116
+[    5.412865] microcode: Updated early from: 0x0aa00116
+amd@volcano9f6e-hostos:~$
+
+Latest Firmware installed: DUAL_RVC100FD_1_RVOT1005B

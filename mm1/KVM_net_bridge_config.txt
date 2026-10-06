@@ -1,0 +1,445 @@
+# use sudo brctl command to configure bridge "br0"
+
+Also we can do "bro" creation as below in : /etc/netplan/00-installer-config.yaml
+1. $sudo vi /etc/netplan/00-installer-config.yaml
+   [ edit as below]
+
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    enp97s0:
+      dhcp4: true
+  bridges:
+    br0:
+      interfaces:
+        - enp97s0
+      dhcp4: true
+  version: 2
+
+2. sudo netplan apply
+
+enp82s0
+
+## to get MAC detail for a VM
+virsh domiflist <vm name>
+
+
+RHEL:
+
+Net config file:  /etc/sysconfig/network-scripts/
+
+sudo nmcli connection add type ethernet ifname enp82s0
+Connection 'ethernet-enp0s8' (09d26960-25a0-440f-8b20-c684d7adc2f5) successfully added.
+
+CloudOS brining up a ethernet:
+#####################################################
+sudo nmcli connection add type ethernet ifname enp82s0
+Connection 'ethernet-enp0s8' (09d26960-25a0-440f-8b20-c684d7adc2f5) successfully added.
+
+sudo nmcli conn up ethernet-enp0s8
+#####################################################
+
+$ nmcli connection show
+NAME                UUID                                  TYPE      DEVICE
+Wired connection 1  ac3241e4-b424-35d6-aaa7-07498561688d  ethernet  enp0s3
+Wired connection 2  2279d917-fa02-390c-8603-3083ec5a1d3e  ethernet  enp0s8
+Wired connection 3  52d89737-de92-35ec-b082-8cf2e5ac36e6  ethernet  enp0s9
+ethernet-enp0s8     09d26960-25a0-440f-8b20-c684d7adc2f5  ethernet  --  
+
+$ nmcli connection up ethernet-enp0s8
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/4)
+
+nmcli conn add type bridge con-name br0 ifname br0
+nmcli conn add type ethernet slave-type bridge con-name bridge-br0 ifname enp68s0f1 master br0
+nmcli conn up br0
+nmcli conn down enp68s0f1
+brctl show br0 ( for bridge details) 
+
+
+Creating ethernet connection & bridge:
+#####################################################################
+nmcli con add type bridge ifname br0
+nmcli con modify bridge-br0 bridge.stp no
+nmcli con add type bridge-slave ifname enp82s0 master bridge-br0
+ - the above comands create the following files under /etc/sysconfig/network-scripts:
+   ifcfg-bridge-br0  ifcfg-bridge-slave-enp82s0
+ - Now just reboot the system [ NO nmcli commands !!!! ]
+ - and the "br0" comes up with IP addr, after reboot
+
+#####################################################################
+
+After bringingup Bridge, we need to configure Network for KVM [ using virsh ]
+
+1) Create a xml file as below:
+
+cat /tmp/kvm_net.xml
+##################################
+<network>
+  <name>br0</name>
+  <forward mode="bridge"/>
+  <bridge name="br0" />
+</network>
+##################################
+
+2. Then run the following to configure the network for virtualization:
+
+cat /tmp/kvm_net.sh
+####################
+virsh net-define /tmp/kvm_net.xml
+virsh net-start br0
+virsh net-autostart br0
+virsh net-list --all
+
+################
+
+
+
+Removing connection:
+ nmcli conn down br0
+ nmcli conn  del br0
+
+
+virbr0 [ default bridge config ]
+
+<network connections="1">
+  <name>default</name>
+  <uuid>e807d683-b779-406e-a019-dae5bcd9327f</uuid>
+  <forward mode="nat">
+    <nat>
+      <port start="1024" end="65535"/>
+    </nat>
+  </forward>
+  <bridge name="virbr0" stp="on" delay="0"/>
+  <mac address="52:54:00:71:99:cf"/>
+  <ip address="192.168.122.1" netmask="255.255.255.0">
+    <dhcp>
+      <range start="192.168.122.2" end="192.168.122.254"/>
+    </dhcp>
+  </ip>
+</network>
+
+virbr1 [ user defined virtual bridge virbr1 ]
+<network>
+  <name>virbr1</name>
+  <uuid>3c68cc1d-2de4-406b-9cff-caec7689a143</uuid>
+  <forward mode="nat">
+    <nat>
+      <port start="1024" end="65535"/>
+    </nat>
+  </forward>
+  <bridge name="virbr1" stp="on" delay="0"/>
+  <mac address="52:54:00:8a:0d:14"/>
+  <domain name="virbr1"/>
+  <ip address="192.168.100.1" netmask="255.255.255.0">
+    <dhcp>
+      <range start="192.168.100.1" end="192.168.100.254"/>
+    </dhcp>
+  </ip>
+</network>
+
+
+run "virsh net-define" on this xml file & the virtual bridge will be defined.
+
+virbr0 xml file:
+
+/etc/libvirt/qemu/networks/default.xml
+
+sudo virsh net-define /etc/libvirt/qemu/networks/default.xml
+sudo virsh net-autostart default
+sudo virsh net-start default
+
+    </controller>
+    <interface type='bridge'>
+      <mac address='52:54:00:f0:ca:18'/>
+      <source bridge='br0'/>
+      <target dev='vnet3'/>
+      <model type='virtio'/>
+      <alias name='net0'/>
+      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+
+======>
+
+    </controller>
+    <interface type='network'>
+      <mac address='52:54:00:20:86:4d'/>
+      <source network='virbr1'/>
+      <model type='e1000'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+
+
+1.  Volcano-99FC.amd.com : ethernet connection is down. System: 10.86.20.151. The network issue has to be fixed to continue the Linux  back ported pacthes testing.
+
+2. Volcano-9B0C.amd.com - Turin system not coming up after rebbot:  https://10.86.20.144/.  This system is used for OpenCloudOS Linux backport patches testing. It is blocking the testing. Need to be addresses asasp.
+
+3. Volcano-9F6E.amd.com - ethernet connection down -  10.86.20.159 also went down. Pls bring it up..."
+
+52 54 00 e4 e5 0f
+enp82s0
+
+
+nmcli conn add type bridge con-name br0 ifname br0
+nmcli con add type bridge-slave ifname enp82s0 master br0
+sudo nmcli con modify br0 bridge.stp no
+nmcli -f bridge con show br0
+nmcli conn down enp82s0 [ here, enp82s0 is connection name, NOT the device name .
+                        carefull => run nmcli con show & get connection name, and use it here ]
+nmcli conn up br0
+
+
+centos:
+########
+
+nmcli con add type bridge ifname br0
+nmcli con modify bridge-br0 bridge.stp no
+nmcli con add type bridge-slave ifname enp82s0 master bridge-br0
+ - the above comands create the following files under /etc/sysconfig/network-scripts:
+   ifcfg-bridge-br0  ifcfg-bridge-slave-enp82s0
+ - Now just reboot the system [ NO nmcli commands !!!! ]
+ - and the "br0" comes up with IP addr, after reboot
+
+
+nmcli con add type bridge-slave ifname enp97s0 master bridge-br0
+
+
+
+
+[root@volcano9f8e-oshost network-scripts]# ls
+ifcfg-bridge-br0  ifcfg-bridge-slave-enp82s0  ifcfg-enp82s0
+[root@volcano9f8e-oshost network-scripts]# cat ifcfg-bridge-br0
+STP=no
+TYPE=Bridge
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=dhcp
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=bridge-br0
+UUID=c63eed7e-6085-4f4b-a670-9470e6c38467
+DEVICE=br0
+ONBOOT=yes
+[root@volcano9f8e-oshost network-scripts]# cat ifcfg-bridge-slave-enp82s0
+TYPE=Ethernet
+NAME=bridge-slave-enp82s0
+UUID=912b78fb-a499-44b3-8d2b-d4f426f817a5
+DEVICE=enp82s0
+ONBOOT=yes
+BRIDGE_UUID=c63eed7e-6085-4f4b-a670-9470e6c38467
+BRIDGE=br0
+[root@volcano9f8e-oshost network-scripts]# cat ifcfg-enp82s0
+TYPE=Ethernet
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=dhcp
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+NAME=enp82s0
+UUID=98160318-5130-443e-876f-cfbb90a9286e
+DEVICE=enp82s0
+ONBOOT=yes
+[root@volcano9f8e-oshost network-scripts]#
+
+
+
+nmcli con add type bridge-slave ifname em1 master bridge-br0
+
+
+
+Velinux:
+#######
+setting up "netplan" , network & bridge
+
+1) apt update
+2) apt install lvm2  [ lvdisplay command ]
+3) apt install netplan.io
+4) netplan status [ gets current network status ]
+5) 
+
+velinux5
+
+
+
+nmcli connection add type ethernet ifname enP1p66s0
+
+nmcli conn up ethernet-enP1p66s0
+
+nmcli con add type bridge-slave ifname enP1p66s0 master bridge-br0
+
+virsh # net-list --all
+ Name      State      Autostart   Persistent
+----------------------------------------------
+ br0       active     yes         yes
+ default   inactive   yes         yes
+
+virsh # net-dumpxml default
+<network>
+  <name>default</name>
+  <uuid>aa589ef8-7e54-43c2-a570-0b21466f1bd4</uuid>
+  <forward mode='nat'/>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:37:53:a6'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+    </dhcp>
+  </ip>
+</network>
+
+virsh #
+
+
+virsh # net-dumpxml default
+<network>
+  <name>default</name>
+  <uuid>bd47379f-5fd6-458e-88e8-43dd163b091b</uuid>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:66:ee:4a'/>
+  <ip address='192.168.124.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.124.2' end='192.168.124.254'/>
+    </dhcp>
+  </ip>
+</network>
+
+Summary:
+
+OpenEuler 6.6 kernel test summary:
+
+BareMetal:
+
+
+Status : All tests complete & shared the required ELVES & avocado code changes to upstream team to merge with ELVES framework.
+
+Virt:
+
+Status: 
+
+OpenEuler 6.15 kernel test summary:
+
+
+/etc/ssh/sshd_config
+PermitRootLogin yes
+
+service restart sshd
+
+The SNP backport includes the following components:
+1: kernel  - Which includes KABI bug fix patch
+
+2 lib,,,, - which DO not include any out
+
+The kernel patches KABI bug fix patch is a out-of-tree type. So it needs Infobell's agreement signing with openeuler community, which is pending. So Paul is waiting for that agreement to be signed & then only he will be able to approve.
+
+So that, we have planned to share the tar ball for kernel [ including KABI fix patch ], 
+
+The team does n
+
+
+Velinux - virbr0 enablement
+########
+
+Build kernel with the following
+CONFIG_IP_NF_FILTER=m  [ ip_tables.ko ]
+CONFIG_NETFILTER_XT_TARGET_REJECT=m  [ xt_REJECT.ko ]
+
+Once the module build, load it:
+
+insmod <module path>
+
+run: virsh net-start default
+
+VeLinux / Debian / ubuntu "br0" enablement : [ https://wiki.debian.org/BridgeNetworkConnections ]
+###################################################################
+
+root@volcano9dee-hostos:/etc/network# cat /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug enp82s0
+#iface enp82s0 inet dhcp
+iface enp82s0 inet manual
+
+# Bridge setup
+auto br0
+iface br0 inet dhcp
+    bridge_ports enp82s0
+root@volcano9dee-hostos:/etc/network#
+
+###################################################################
+
+
+CloudOS brining up a ethernet:
+#####################################################
+sudo nmcli connection add type ethernet ifname enp132s0
+Connection 'ethernet-enp0s8' (09d26960-25a0-440f-8b20-c684d7adc2f5) successfully added.
+
+sudo nmcli conn up ethernet-enp132s0
+#####################################################
+10.216.177.69
+
+
+Assign the IP address: Use the following syntax, replacing the IP and device name with your own:
+sudo ip addr add 192.168.1.50/24 dev eth0
+Bring the interface up:
+sudo ip link set dev eth0 up 
+
+sudo ip addr del 192.168.1.100/24 dev eth0
+
+ ip link show
+
+ ip route
+
+ ip route add default via <gateway-ip>
+
+IP conflict (already used) = arping -I <iface> <ip>
+
+ip addr show enp138s0
+
+titanite:
+
+[amd@10-100-154-135 ~]$ ip route
+default via 10.100.159.254 dev br0 proto dhcp src 10.100.154.135 metric 425
+10.100.128.0/19 dev br0 proto kernel scope link src 10.100.154.135 metric 425
+[amd@10-100-154-135 ~]$
+
+venice:
+amd@nigeria-4338-vm-66:~$ ip route
+default via 10.216.179.254 dev enp1s0 proto dhcp src 10.216.177.195 metric 100
+10.216.176.0/22 dev enp1s0 proto kernel scope link src 10.216.177.195 metric 100
+10.216.179.254 dev enp1s0 proto dhcp scope link src 10.216.177.195 metric 100
+10.218.15.1 via 10.216.179.254 dev enp1s0 proto dhcp src 10.216.177.195 metric 100
+10.218.15.2 via 10.216.179.254 dev enp1s0 proto dhcp src 10.216.177.195 metric 100
+amd@nigeria-4338-vm-66:~$
+
+ip route add default via 10.216.179.254 dev enp138s0
+
+while running "ip route add default via 10.216.179.254 dev enp138s0", its errors out saying " Nexthup has invalid gateway". What is the problem?
+
+nmap -sn 10.216.179.0/24 => finds all ips used in the sub net
+
+ip addr add 10.216.179.243/24 dev enp138s0
+ip link set enp138s0 up
+ip route add default via 10.216.179.254
+
+
+Adding DNS name server:
+echo "nameserver 8.8.8.8" >>  /etc/resolv.conf

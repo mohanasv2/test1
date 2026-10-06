@@ -1,0 +1,18 @@
+
+
+<domain type='kvm'>
+  <name>vm1</name>
+  <uuid>9dd07f02-ab21-45ab-b132-4138f5324952</uuid>
+  <memory unit='KiB'>16777216</memory>
+  <currentMemory unit='KiB'>16777216</currentMemory>
+  <vcpu placement='static'>16</vcpu>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='pc-i440fx-8.2'>hvm</type>
+    <firmware>
+      <feature enabled='no' name='enrolled-keys'/>
+      <feature enabled='no' name='secure-boot'/>
+    </firmware>
+    <loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>
+    <nvram template='/usr/share/edk2/ovmf/OVMF_VARS.fd'>/var/lib/libvirt/qemu/nvram/vm1_VARS.fd</nvram>
+    <boot dev='hd'/>
+  </os>

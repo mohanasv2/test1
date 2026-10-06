@@ -1,0 +1,10 @@
+
+
+In /etc/libvirt/libvirtd.conf:
+
+set :
+
+log_level = 1
+log_outputs="1:file:/home/amd/libvirt_log"
+
+and restart "libvirtd".. the debug msgs will be logged in /home/amd/libvirt_log

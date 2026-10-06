@@ -1,0 +1,119 @@
+#!/bin/bash
+###############################################################################
+# smca_uniform_check.sh
+#   Determine whether an AMD (Zen/EPYC — Genoa/Turin/etc.) system has
+#   UNIFORM or NON-UNIFORM SMCA bank enumeration.
+#
+#   Method: read MCA_IPID (0xC0002005 + bank*16) for every bank on every
+#           online CPU and compare each bank's IPID against a reference CPU.
+#           Any bank whose IPID differs across CPUs => NON-UNIFORM.
+#
+#   Usage:  sudo ./smca_uniform_check.sh
+###############################################################################
+
+MCA_IPID_BASE=0xC0002005    # per-bank stride = 0x10
+
+# ---------------------------------------------------------------------------
+# Preconditions
+# ---------------------------------------------------------------------------
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: must run as root (need MSR access)." >&2
+  exit 1
+fi
+modprobe msr 2>/dev/null
+if ! command -v rdmsr >/dev/null 2>&1; then
+  echo "ERROR: rdmsr not found. Install msr-tools." >&2
+  exit 1
+fi
+
+# Bank count from sysfs (fallback 32)
+NBANKS=$(ls /sys/devices/system/machinecheck/machinecheck0/ 2>/dev/null | grep -c '^bank')
+[ "$NBANKS" -eq 0 ] && NBANKS=32
+
+# Online CPUs
+CPUS=$(lscpu -p=CPU 2>/dev/null | grep -v '^#')
+[ -z "$CPUS" ] && CPUS=$(seq 0 $(( $(nproc) - 1 )))
+REF_CPU=$(echo "$CPUS" | head -1)
+NCPUS=$(echo "$CPUS" | wc -l)
+
+# ---------------------------------------------------------------------------
+# Helper: read MCA_IPID, return full-width 16-hex-digit value (leading zeros)
+# ---------------------------------------------------------------------------
+read_ipid() {  # $1=cpu  $2=bank
+  local v
+  v=$(rdmsr -p "$1" $((MCA_IPID_BASE + $2*16)) 2>/dev/null)
+  printf "%016x" "0x${v:-0}"
+}
+
+# ---------------------------------------------------------------------------
+# Helper: decode IPID -> HWID:McaType -> IP block name
+# ---------------------------------------------------------------------------
+decode_ipid() {
+  local ipid=$((16#$1))
+  local hwid=$(( (ipid >> 32) & 0xFFF ))
+  local mcatype=$(( (ipid >> 48) & 0xFFFF ))
+  local name
+  case "$hwid,$mcatype" in
+    1,0)  name="LS";;          1,1)  name="LS_V2";;      1,2)  name="MA_LLC";;
+    2,0)  name="IF";;          3,0)  name="L2_CACHE";;   5,0)  name="DE";;
+    6,0)  name="EX";;          7,0)  name="FP";;         8,0)  name="L3_CACHE";;
+    9,0)  name="CS";;          9,1)  name="CS_V2";;      10,0) name="PIE";;
+    16,0) name="UMC";;         16,1) name="UMC_V2";;     17,0) name="PB";;
+    19,0) name="PSP";;         19,1) name="PSP_V2";;     20,0) name="SMU";;
+    20,1) name="SMU_V2";;      21,0) name="MP5";;        22,0) name="MPDMA";;
+    23,0) name="NBIO";;        24,0) name="PCIE";;       24,1) name="PCIE_V2";;
+    25,0) name="XGMI_PCS";;    26,0) name="NBIF";;       27,0) name="SHUB";;
+    28,0) name="SATA";;        29,0) name="USB";;        30,0) name="GMI_PCS";;
+    31,0) name="WAFL_PCS";;    70,0) name="GMI_PHY";;
+    0,0)  name="(empty/unpopulated)";;
+    *)    name="UNKNOWN(HWID=0x$(printf %03X $hwid),McaType=0x$(printf %04X $mcatype))";;
+  esac
+  printf "%s" "$name"
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+echo "############################################################"
+echo "# SMCA Uniform/Non-Uniform Check"
+echo "# Host: $(hostname)   Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+echo "# CPUs scanned: $NCPUS (reference CPU=$REF_CPU)   Banks: $NBANKS"
+echo "############################################################"
+echo ""
+
+overall_uniform=1
+nonuniform_banks=0
+
+for b in $(seq 0 $((NBANKS-1))); do
+  ref=$(read_ipid "$REF_CPU" "$b")
+  bank_uniform=1
+  mismatch_detail=""
+
+  for c in $CPUS; do
+    [ "$c" = "$REF_CPU" ] && continue
+    cur=$(read_ipid "$c" "$b")
+    if [ "$cur" != "$ref" ]; then
+      bank_uniform=0
+      overall_uniform=0
+      mismatch_detail+=" CPU$c=0x$cur[$(decode_ipid "$cur")]"
+    fi
+  done
+
+  if [ "$bank_uniform" -eq 0 ]; then
+    nonuniform_banks=$((nonuniform_banks+1))
+    echo "Bank $b : NON-UNIFORM"
+    echo "    ref CPU$REF_CPU = 0x$ref [$(decode_ipid "$ref")]"
+    echo "    differs on:$mismatch_detail"
+  fi
+done
+
+echo ""
+echo "------------------------------------------------------------"
+if [ "$overall_uniform" -eq 1 ]; then
+  echo "RESULT: UNIFORM SMCA"
+  echo "  Every bank maps to an identical MCA_IPID on all $NCPUS CPUs."
+else
+  echo "RESULT: NON-UNIFORM SMCA"
+  echo "  $nonuniform_banks bank(s) have IPID that differs across CPUs (listed above)."
+fi
+echo "------------------------------------------------------------"

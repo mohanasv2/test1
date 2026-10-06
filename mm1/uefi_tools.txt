@@ -1,0 +1,605 @@
+from Host system:
+
+efibootmgr
+
+during boot from OpenBMC:
+
+uefi 
+
+NVMe partition table:
+
+sudo parted -l
+
+
+OS install log at: /var/log/anaconda/
+
+efibootmgr command during install time:
+
+efibootmgr -c -w -L CentOS Linux -d /dev/nvme3n1 -p 1 -l \EFI\centos\shimx64.efi
+efibootmgr -c -w -L openEuler -d /dev/nvme1n1 -p 1 -l \EFI\openEuler\shimx64.efi
+
+
+[ changing loader ]
+efibootmgr -b 8 --label="ubuntu" --loader='EFI\ubuntu\shimx64.efi'
+
+creating new boot entry:
+efibootmgr --create --disk=/dev/nvme2n1p1 --label="ubuntu" --loader='EFI\ubuntu\shimx64.efi'
+
+efibootmgr --create --disk=/dev/nvme4n1 --part=1 --label="Euler2403" --loader='EFI\openEuler\shimx64.efi'
+
+bcfg boot add 3 fs1:\EFI\refind\refind_x64.efi "rEFInd"
+
+To modify the description in boot option #2:
+> bcfg boot mod 2 “My UEFI App”
+To modify the device path in boot option #8 to the path associated with device handle 26F:
+> bcfg boot modh 8 26f
+
+setting uefi boottime timeout:
+
+[root@volcano9b5e-os ~]# efibootmgr -t 15
+BootCurrent: 0005
+Timeout: 15 
+
+#delete a boot entry:
+  efibootmgr -b [boot entry no]  -B   [ efibootmgr -b 1 -B => delets boot entry 1 ]
+changing boot order:
+
+#efibootmgr  [ get current order ]
+
+  0005,0002,0003,0004,0008,0009,0000,0007
+
+#efibootmgr -o 0009,0005,0002,0003,0004,0008,0000,0007
+
+[root@volcano99fc-os ~]# sudo parted -l
+Model: NVMe Device (nvme)
+Disk /dev/nvme0n1: 512GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name  Flags
+ 1      1049kB  1128MB  1127MB  fat32              boot, esp
+ 2      1128MB  3276MB  2147MB  ext4
+ 3      3276MB  512GB   509GB
+
+
+Model: NVMe Device (nvme)
+Disk /dev/nvme3n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  630MB   629MB   fat32        EFI System Partition  boot, esp
+ 2      630MB   1704MB  1074MB  ext4
+ 3      1704MB  3841GB  3839GB                                     lvm
+
+
+Model: NVMe Device (nvme)
+Disk /dev/nvme2n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  630MB   629MB   fat32        EFI System Partition  boot, esp
+ 2      630MB   1704MB  1074MB  xfs
+ 3      1704MB  3841GB  3839GB  ext4                               lvm
+
+
+Model: NVMe Device (nvme)
+Disk /dev/nvme1n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  630MB   629MB   fat32        EFI System Partition  boot, esp
+ 2      630MB   1704MB  1074MB  xfs
+ 3      1704MB  3841GB  3839GB                                     lvm
+
+
+Error: /dev/nvme4n1: unrecognised disk label
+Model: NVMe Device (nvme)
+Disk /dev/nvme4n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: unknown
+Disk Flags:
+
+
+uefi  output for 99fc:
+> map
+Mapping table
+      FS0: Alias(s):HD0b:;BLK1:
+          PciRoot(0x0)/Pci(0x5,0x1)/Pci(0x0,0x0)/NVMe(0x1,3F-C3-A0-31-B8-38-25-00)/HD(1,GPT,E17AEA94-8EEA-43BC-BF55-7FD4607A5649,0x800,0x219800)
+      FS1: Alias(s):HD1b:;BLK5:
+          PciRoot(0x6)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,98048C04-0134-4814-B6AE-1636ABCACBB2,0x800,0x12C000)
+     BLK0: Alias(s):
+          PciRoot(0x0)/Pci(0x5,0x1)/Pci(0x0,0x0)/NVMe(0x1,3F-C3-A0-31-B8-38-25-00)
+     BLK2: Alias(s):
+          PciRoot(0x0)/Pci(0x5,0x1)/Pci(0x0,0x0)/NVMe(0x1,3F-C3-A0-31-B8-38-25-00)/HD(2,GPT,59B52ABE-233D-4DED-B932-2194EDDCEAA8,0x21A000,0x400000)
+     BLK3: Alias(s):
+          PciRoot(0x0)/Pci(0x5,0x1)/Pci(0x0,0x0)/NVMe(0x1,3F-C3-A0-31-B8-38-25-00)/HD(3,GPT,D88F555D-3552-4BC2-AFA1-565D364A89E9,0x61A000,0x3B3C6800)
+     BLK4: Alias(s):
+          PciRoot(0x6)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)
+     BLK6: Alias(s):
+          PciRoot(0x6)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(2,GPT,39B19FF6-2D62-4021-850E-7C6C2081A94F,0x12C800,0x200000)
+     BLK7: Alias(s):
+          PciRoot(0x6)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(3,GPT,8EA3C93F-E8B0-46A8-8E3E-76B34C6F097F,0x32C800,0x1BEECA800)
+> 
+> bcfg boot -b dump
+Option: 00. Variable: Boot0003   
+  Desc    - UEFI: Built-in EFI 
+  DevPath - VenMedia(5023B95C-DB26-429B-A648-BD47664C8012)
+  Optional- Y
+Option: 01. Variable: Boot0004   
+  Desc    - Hard Drive
+  DevPath - BBS(HD,)
+  Optional- Y
+Option: 02. Variable: Boot0000   
+  Desc    - CentOS Linux
+  DevPath - HD(1,GPT,98048C04-0134-4814-B6AE-1636ABCACBB2,0x800,0x12C000)/\EFI\centos\shimx64.efi
+  Optional- N
+Option: 03. Variable: Boot0001   
+  Desc    - ubuntu
+  DevPath - HD(1,GPT,E17AEA94-8EEA-43BC-BF55-7FD4607A5649,0x800,0x219800)/\EFI\ubuntu\shimx64.efi
+  Optional- Y
+Option: 04. Variable: Boot0002   
+  Desc    - UEFI: PXE IPv4 Broadcom NetXtreme Gigabit Ethernet (BCM5720)
+  DevPath - PciRoot(0x3)/Pci(0x5,0x2)/Pci(0x0,0x0)/MAC(745D22D7A531,0x1)/IPv4(0.0.0.0)
+  Optional- Y
+Option: 05. Variable: Boot0006   
+Press ENTER to continue or 'Q' break:
+  Desc    - Anolis OS
+  DevPath - VenHw(99E275E7-75A0-4B37-A2E6-C5385E6C00CB)
+  Optional- N
+Option: 06. Variable: Boot0005   
+  Desc    - openEuler
+  DevPath - VenHw(99E275E7-75A0-4B37-A2E6-C5385E6C00CB)
+  Optional- N
+> 
+> FS1:
+FS1:\> ls
+Directory of: FS1:\
+01/26/2025  01:22 <DIR>         4,096  EFI
+          0 File(s)           0 bytes
+          1 Dir(s)
+FS1:\> 
+FS1:\> ls EFI\openEuler
+Directory of: FS1:\EFI\openEuler\
+01/26/2025  01:22 <DIR>         4,096  .
+01/26/2025  01:22 <DIR>         4,096  ..
+12/28/2023  06:37              91,968  fbx64.efi
+12/28/2023  06:37             862,376  mmx64.efi
+12/28/2023  06:37             953,104  shimx64.efi
+12/28/2023  06:37                  77  shimx64.hash
+12/28/2023  06:20 <DIR>         4,096  fonts
+01/26/2025  01:24               1,024  grubenv
+12/28/2023  06:20           2,605,024  grubx64.efi
+01/26/2025  07:26               9,498  grub.cfg
+12/28/2023  06:37                 122  BOOTX64.CSV
+          8 File(s)   4,523,193 bytes
+          3 Dir(s)
+FS1:\> FS0:
+
+FS0:\> ls EFI\opencloudos
+Directory of: FS0:\EFI\opencloudos\
+05/23/2024  09:04 <DIR>         4,096  .
+05/23/2024  09:04 <DIR>         4,096  ..
+01/07/2024  20:04             853,099  mmx64.efi
+01/07/2024  20:04             934,419  shimx64.efi
+05/23/2024  09:06                 144  grub.cfg
+01/25/2024  07:38           2,617,344  grubx64.efi
+05/23/2024  09:05               6,981  grub.cfg.rpmsave
+01/07/2024  20:04                 128  BOOTX64.CSV
+          6 File(s)   4,412,115 bytes
+          2 Dir(s)
+
+FS2:\> ls EFI\Boot\ 
+Directory of: FS2:\EFI\Boot\
+01/02/2024  15:43 <DIR>         2,048  .
+01/02/2024  15:43 <DIR>         2,048  ..
+01/02/2024  15:43 <DIR>         2,048  fonts
+12/28/2023  14:37             953,104  BOOTX64.EFI
+12/28/2023  14:37             862,376  mmx64.efi
+12/28/2023  14:20           2,605,024  grubx64.efi
+01/02/2024  15:43               1,463  grub.cfg
+          4 File(s)   4,421,967 bytes
+          3 Dir(s)
+FS2:\> 
+
+efibootmgr -b 5 --label="Anolis" --loader='EFI/anolis/shimx64.efi'
+
+## change label:
+
+# efibootmgr -b 0000 -L "Ubuntu 12.10"
+ efibootmgr -b 4 -label="openEuler 5.10"
+ efibootmgr -b 0 -L "openEuler 6.6"
+
+
+efibootmgr -b 6 --label="opencloudos810" --loader='EFI\opencloudos\shimx64.efi'
+
+
+[root@volcano9b5e-host ~]# lsblk
+NAME                            MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda                               8:0    1     0B  0 disk
+nvme0n1                         259:0    0 476.9G  0 disk
+├─nvme0n1p1                     259:1    0   600M  0 part /boot/efi
+├─nvme0n1p2                     259:2    0     1G  0 part /boot
+└─nvme0n1p3                     259:3    0 475.4G  0 part
+  ├─openeuler00-root            253:0    0    70G  0 lvm  /
+  ├─openeuler00-swap            253:1    0     4G  0 lvm  [SWAP]
+  └─openeuler00-home            253:2    0 401.4G  0 lvm  /home
+nvme1n1                         259:5    0   3.5T  0 disk
+nvme2n1                         259:7    0   3.5T  0 disk
+├─nvme2n1p1                     259:8    0   600M  0 part /mm1
+├─nvme2n1p2                     259:9    0     1G  0 part
+└─nvme2n1p3                     259:10   0   3.5T  0 part
+  ├─opencloudos-swap            253:3    0     4G  0 lvm
+  ├─opencloudos-home            253:7    0   3.4T  0 lvm
+  └─opencloudos-root            253:8    0    70G  0 lvm
+nvme4n1                         259:13   0   3.5T  0 disk
+├─test_results-test_results_lv1 253:4    0     1T  0 lvm  /tests
+├─test_results-test_results_lv2 253:5    0     2T  0 lvm  /vms
+└─test_results-test_results_lv3 253:6    0   500G  0 lvm  /src
+nvme3n1                         259:14   0   3.5T  0 disk
+[root@volcano9b5e-host ~]#
+
+  LV Path                /dev/opencloudos/swap
+  VG Name                opencloudos
+  LV Path                /dev/opencloudos/home
+  VG Name                opencloudos
+  LV Path                /dev/opencloudos/root
+  VG Name                opencloudos
+[root@volcano9b5e-host ~]#
+
+[root@volcano9b5e-host ~]# ls /dev/mapper/opencl*
+/dev/mapper/opencloudos-home  /dev/mapper/opencloudos-root  /dev/mapper/opencloudos-swap
+
+### BEGIN /etc/grub.d/10_linux ###
+menuentry 'openEuler (5.10.0-136.12.0.92.rc2.ctl3.x86_64) 22.03 (LTS-SP1)' --class openeuler --class gnu-linux --class gnu --class os --unrestricted $menuentry_id_option 'gnulinux-5.10.0-136.12.0.86.oe2203sp1.x86_64-advanced-91cd7f75-915f-4bf9-9535-ce8864f8aef0' {
+        load_video
+        set gfxpayload=keep
+        insmod gzio
+        insmod part_gpt
+        insmod ext2
+        search --no-floppy --fs-uuid --set=root b09a3231-72a1-4d2c-8433-824b1e1d8e02
+        echo 'Loading openEuler (5.10.0-136.12.0.92.rc2.ctl3.x86_64) 22.03 (LTS-SP1)'
+        linuxefi        /vmlinuz-5.10.0-136.12.0.92.rc2.ctl3.x86_64 root=/dev/mapper/openeuler00-root ro resume=/dev/mapper/openeuler00-swap rd.lvm.lv=openeuler00/root rd.lvm.lv=openeuler00/swap cgroup_disable=files apparmor=0 crashkernel=512M
+        echo 'Loading initial ramdisk ...'
+        initrdefi /initramfs-5.10.0-136.12.0.92.rc2.ctl3.x86_64.img
+
+
+efibootmgr -c -w -L opencloudos8 -d /dev/nvme2n1 -p 1 -l \\EFI\\openEuler\\shimx64.efi
+
+S1:\> map
+Mapping table
+      FS0: Alias(s):HD0b:;BLK1:
+          PciRoot(0x0)/Pci(0x5,0x1)/Pci(0x0,0x0)/NVMe(0x1,FA-A7-A0-31-B8-38-25-00)/HD(1,GPT,C25209DB-9F00-45F0-AC17-FA129FA4F6FD,0x800,0x12C000)
+      FS1: Alias(s):HD2b:;BLK6:
+          PciRoot(0x1)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,FBD9CF44-EA07-41CC-AEAD-D6D084EE34EB,0x800,0x12C000)
+
+
+
+FS1:\> bcfg boot dump
+Option: 00. Variable: Boot0002   
+  Desc    - UEFI: Built-in EFI 
+  DevPath - VenMedia(5023B95C-DB26-429B-A648-BD47664C8012)
+  Optional- Y
+Option: 01. Variable: Boot0004   
+  Desc    - openeuler
+  DevPath - HD(1,GPT,C25209DB-9F00-45F0-AC17-FA129FA4F6FD,0x800,0x12C000)/\EFI\OPENEULER\SHIMX64.EFI
+  Optional- N
+Option: 02. Variable: Boot0009   
+  Desc    - UEFI OS
+  DevPath - HD(1,GPT,C25209DB-9F00-45F0-AC17-FA129FA4F6FD,0x800,0x12C000)/\EFI\BOOT\BOOTX64.EFI
+  Optional- Y
+
+Option: 03. Variable: Boot000A     =======> belongs to "FS1" file system [ see dev id : FBD9CF44 ]
+  Desc    - UEFI OS
+  DevPath - HD(1,GPT,FBD9CF44-EA07-41CC-AEAD-D6D084EE34EB,0x800,0x12C000)/\EFI\BOOT\BOOTX64.EFI
+  Optional- Y
+
+
+Option: 04. Variable: Boot0005   
+  Desc    - UEFI: PXE IPv4 Broadcom NetXtreme Gigabit Ethernet (BCM5720)
+  DevPath - PciRoot(0x3)/Pci(0x5,0x2)/Pci(0x0,0x0)/MAC(745D22D7A466,0x1)/IPv4(0.0.0.0)
+  Optional- Y
+Option: 05. Variable: Boot0006   
+  Desc    - opencloudos8
+  DevPath - VenHw(99E275E7-75A0-4B37-A2E6-C5385E6C00CB)
+  Optional- N
+Option: 06. Variable: Boot0003   
+  Desc    - velinux
+  DevPath - VenHw(99E275E7-75A0-4B37-A2E6-C5385E6C00CB)
+  Optional- N
+FS1:\> 
+
+moving boot order in UEFI :
+
+1) run "bcfg boot dump"  => will list all boot entries & their orders
+
+2) bcfg boot mv [src number ] [dest number ]
+
+  example: moving the boot entry 5 to the top [ 0 ]
+   bcfg boot mv 5 0
+  
+3) adding new entry:
+ bcfg boot add 0 fs1:\EFI\opencloudos\shimx64.efi cloudos810
+
+
+
+9f8e [ UEFI   entries ]
+###########################
+
+> map
+Mapping table
+      FS0: Alias(s):HD0b:;BLK1:
+          PciRoot(0x1)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,FC420B8E-2B0E-437C-B070-459138887293,0x800,0x12C000)
+      FS1: Alias(s):HD1b:;BLK5:
+          PciRoot(0x1)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,A07A0DDA-6447-4626-81DA-4124E45D1BDE,0x800,0x12C000)
+      FS2: Alias(s):HD3b:;BLK10:
+          PciRoot(0x5)/Pci(0x3,0x1)/Pci(0x0,0x0)/NVMe(0x1,ED-C6-A0-31-B8-38-25-00)/HD(1,GPT,595742C7-D952-4A3D-8B39-6DB76EEC842E,0x800,0x219800)
+     BLK0: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)
+     BLK2: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(2,GPT,86533B06-9E23-4053-A955-90D372207AAD,0x12C800,0x200000)
+     BLK3: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(3,GPT,C972FA1C-AAD9-4C0F-8DB6-95C137D36BCF,0x32C800,0x1BEECA800)
+     BLK4: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)
+     BLK6: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(2,GPT,DAC6602A-3C41-45F8-A7F2-D270EC4EF0BF,0x12C800,0x200000)
+     BLK7: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(3,GPT,20ADB6F4-6A94-4E89-92E3-96C72FC44902,0x32C800,0x1BEECA800)
+     BLK8: Alias(s):
+          PciRoot(0x1)/Pci(0x1,0x4)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)
+     BLK9: Alias(s):
+          PciRoot(0x5)/Pci(0x3,0x1)/Pci(0x0,0x0)/NVMe(0x1,ED-C6-A0-31-B8-38-25-00)
+    BLK11: Alias(s):
+          PciRoot(0x5)/Pci(0x3,0x1)/Pci(0x0,0x0)/NVMe(0x1,ED-C6-A0-31-B8-38-25-00)/HD(2,GPT,9404D42B-7C2F-445D-9AC0-3DD37447F117,0x21A000,0x400000)
+    BLK12: Alias(s):
+          PciRoot(0x5)/Pci(0x3,0x1)/Pci(0x0,0x0)/NVMe(0x1,ED-C6-A0-31-B8-38-25-00)/HD(3,GPT,86CEDAAD-794F-4DBE-8009-71699C79CEA9,0x61A000,0x3B3C6800)
+    BLK13: Alias(s):
+          PciRoot(0xE)/Pci(0x1,0x1)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)
+    BLK14: Alias(s):
+          PciRoot(0xE)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)
+> fs0:
+FS0:\> ls EFI
+Directory of: FS0:\EFI\
+10/27/2024  12:53 <DIR>         4,096  .
+10/27/2024  12:53 <DIR>             0  ..
+10/27/2024  12:55 <DIR>         4,096  anolis
+10/27/2024  12:55 <DIR>         4,096  BOOT
+          0 File(s)           0 bytes
+          4 Dir(s)
+FS0:\> FS1:
+FS1:\> ls EFI
+Directory of: FS1:\EFI\
+05/13/2025  04:17 <DIR>         4,096  .
+05/13/2025  04:17 <DIR>             0  ..
+05/13/2025  04:18 <DIR>         4,096  BOOT
+05/13/2025  04:19 <DIR>         4,096  opencloudos  ================> FS1 file system has opencloudos
+          0 File(s)           0 bytes
+          4 Dir(s)
+FS1:\> 
+
+Adding boot entry to load opencloudos:
+bcfg boot add 0 fs1:\EFI\opencloudos\shimx64.efi cloudos810
+
+after adding check "bcfg boot dump" & check the entry added
+
+Then reboot using "reset" command in the  command line
+
+output
+##########
+FS0:\> FS1:
+FS1:\> ls EFI
+Directory of: FS1:\EFI\
+05/13/2025  04:17 <DIR>         4,096  .
+05/13/2025  04:17 <DIR>             0  ..
+05/13/2025  04:18 <DIR>         4,096  BOOT
+05/13/2025  04:19 <DIR>         4,096  opencloudos  ================> FS1 file system has opencloudos
+          0 File(s)           0 bytes
+          4 Dir(s)
+FS1:\> 
+
+FS1:\> bcfg boot add 0 fs1:\EFI\opencloudos\shimx64.efi cloudos810
+Target = 0004.
+bcfg: Add Boot0004 as 0
+FS1:\> bcfg boot dump
+Option: 00. Variable: Boot0004   
+  Desc    - cloudos810
+  DevPath - PciRoot(0x1)/Pci(0x1,0x2)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,A07A0DDA-6447-4626-81DA-4124E45D1BDE,0x800,0x12C000)/\EFI\opencloudos\shimx64.efi
+  Optional- N
+Option: 01. Variable: Boot0005   
+  Desc    - UEFI: Built-in EFI 
+  DevPath - VenMedia(5023B95C-DB26-429B-A648-BD47664C8012)
+  Optional- Y
+Option: 02. Variable: Boot0000   
+  Desc    - anolis
+  DevPath - HD(1,GPT,FC420B8E-2B0E-437C-B070-459138887293,0x800,0x12C000)/\EFI\anolis\shimx64.efi
+  Optional- N
+Option: 03. Variable: Boot0001   
+  Desc    - UEFI OS
+  DevPath - HD(1,GPT,FC420B8E-2B0E-437C-B070-459138887293,0x800,0x12C000)/\EFI\BOOT\BOOTX64.EFI
+  Optional- Y
+Option: 04. Variable: Boot0002   
+  Desc    - ubuntu
+  DevPath - HD(1,GPT,595742C7-D952-4A3D-8B39-6DB76EEC842E,0x800,0x219800)/\EFI\ubuntu\shimx64.efi
+  Optional- Y
+Option: 05. Variable: Boot0003   
+  Desc    - UEFI: PXE IPv4 Broadcom NetXtreme Gigabit Ethernet (BCM5720)
+  DevPath - PciRoot(0x5)/Pci(0x3,0x3)/Pci(0x0,0x0)/MAC(745D22D7A3E2,0x1)/IPv4(0.0.0.0)
+  Optional- Y
+Option: 06. Variable: Boot0006   
+  Desc    - UEFI OS
+  DevPath - HD(1,GPT,A07A0DDA-6447-4626-81DA-4124E45D1BDE,0x800,0x12C000)/\EFI\BOOT\BOOTX64.EFI
+  Optional- Y
+FS1:\> reset
+######################################
+
+
+/boot/grub/grub.cfg: (Debian)
+
+function load_video {
+  if [ x$feature_all_video_module = xy ]; then
+    insmod all_video
+  else
+    insmod efi_gop
+    insmod efi_uga
+    insmod ieee1275_fb
+    insmod vbe
+    insmod vga
+    insmod video_bochs
+    insmod video_cirrus
+  fi
+}
+
+
+Deleting FS & disk entries in UEFI shell:
+#########################################
+
+map -d fs3  [ deletes FS3 entry ]
+
+map -d <mydisk> [ deletes mydisk ]
+
+Adding boot entry in the UEFI shell:
+#####################################
+
+bcfg boot add 7 fs2:\EFI\opencloudos\shimx64.efi cloudos90
+
+bcfg boot add 7 fs2:\EFI\openEuler\shimx64.efi openeuler2403_66
+
+bcfg boot add 0 fs0:\EFI\anolis\shimx64.efi anolis231
+
+reset [ ==> reboot ]
+
+bcfg boot add A fs1:\EFI\ubuntu\shimx64.efi ubuntu2404
+
+bcfg boot add 1 fs9:\EFI\opencloudos\shimx64.efi cloudos90
+
+bcfg boot add 7 fs0:\EFI\anolis\shimx64.efi anolis_810_510
+
+bcfg boot add 7 fs3:\EFI\velinux\shimx64.efi velinux
+
+bcfg boot add 7 fs3:\EFI\openEuler\shimx64.efi openeuler2503_66
+
+bcfg boot add E fs2:\EFI\anolis\shimx64.efi anolis_810_510
+
+Making HD Drive as bootable disk:
+
+Method 1: Make a whole NVMe disk as  a Bootable Installer:
+If the NVMe disk is dedicated to installation media, write the ISO directly:
+
+dd if=AnolisOS.iso of=/dev/nvme1n1 bs=64M status=progress oflag=sync
+
+Then select that NVMe device from the UEFI boot menu.
+
+Method 2: Make an NVMe disk partition as a Bootable Installer:
+
+suppose:
+
+nvme0n1p1   EFI System Partition
+nvme0n1p2   Existing OS
+nvme0n1p3   Installer Partition (20-30GB)
+nvme0n1p4   Data
+Steps:
+mkfs.ext4 /dev/nvme0n1p3
+mount /dev/nvme0n1p3 /mnt/install
+
+mount -o loop Anolis.iso /mnt/iso
+
+cp -a /mnt/iso/* /mnt/install/
+sync
+
+Grub entry: [ in /etc/grub.d/40_custom ]
+menuentry "Anolis Installer" {
+    search --fs-uuid --set=root <UUID-of-nvme0n1p3>
+
+    linuxefi /images/pxeboot/vmlinuz \
+        inst.stage2=hd:UUID=<UUID-of-nvme0n1p3>
+
+    initrdefi /images/pxeboot/initrd.img
+}
+
+ [ blkid /dev/nvme0n1p3  ==> UUID ]
+
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+Select Anolis Installer from GRUB.
+
+
+
+dd if=/vms/iso/anolis/AnolisOS-23.4-x86_64-dvd.iso of=/dev/nvme1n1 bs=64M status=progress oflag=sync
+
+dd if=/dev/nvme0n1 of=/dev/nvme1n1 bs=64M status=progress
+
+Grub2 install:
+##############
+
+grub2-install /dev/nvme1n1
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+Rebuild initramfs
+#################
+dracut -f --regenerate-all
+
+
+
+source:
+dd if=/dev/nvme0n1 bs=64M status=progress | gzip > image.gz
+
+target:
+gunzip -c image.gz | dd of=/dev/nvme0n1 bs=64M status=progress
+
+dracut -f
+grub2-mkconfig -o /boot/grub2/grub.cfg
+efibootmgr -v
+If no UEFI boot entry exists, create one::
+ 
+efibootmgr -c -d /dev/nvme0n1 -p 1 \
+-L "OpenCloudOS" \
+-l '\EFI\redhat\shimx64.efi'
+
+
+
+mount /dev/nvme1n1p3 /mnt
+mount /dev/nvme1n1p1 /mnt/boot/efi
+
+chroot /mnt
+
+dracut -f
+grub2-mkconfig -o /boot/grub2/grub.cfg
+efibootmgr -v
+
+exit
+``
+
+Add to Linux command line :
+nomodeset acpi=off noapic nolapic nomodeset loglevel=7 ignore_loglevel rd.debug systemd.log_level=debug rd.shell rd.debug
+
+nomodeset loglevel=7 rd.debug rd.shell
+
+UEFI → GRUB → Kernel → initrd/dracut → Anaconda installer.
+
+
+Boot Loader for Anolis 8.10 (5.10 ):
+####################################
+
+[amd@volcano9f8e-host ~]$ rpm -ql grub2-efi-x64-2.02-170.0.1.an8.1.x86_64
+/boot/efi/EFI/anolis/fonts
+/boot/efi/EFI/anolis/grub.cfg
+/boot/efi/EFI/anolis/grubenv
+/boot/efi/EFI/anolis/grubx64.efi
+/boot/grub2/grubenv
+/boot/loader/entries
+/etc/grub2-efi.cfg
+[amd@volcano9f8e-host ~]$ rpm -ql shim-x64-15.8-2.0.1.an8.x86_64
+/boot/efi/EFI/BOOT/BOOTX64.EFI
+/boot/efi/EFI/BOOT/fbx64.efi
+/boot/efi/EFI/anolis/BOOTX64.CSV
+/boot/efi/EFI/anolis/mmx64.efi
+/boot/efi/EFI/anolis/shimx64-anolis.efi
+/boot/efi/EFI/anolis/shimx64.efi
+[amd@volcano9f8e-host ~]$

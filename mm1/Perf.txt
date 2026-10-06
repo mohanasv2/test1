@@ -1,0 +1,95 @@
+
+Perf => monitor H/W (PMU) & S/W events  , trace program execution, profiling
+
+
+perf list => show all events supported by 
+
+
+PMU driver on Linux (Ubuntu): ls /sys/bus/event_source/devices
+
+PMU events supported for the CPU: ls /sys/bus/event_source/devices/cpu/events
+
+
+The max no of PMU events that can be specified to perf stat command:
+
+The available counters of PMU for each CPU are limited [ for example 6 PMC counters per cpu thread ]
+If events selected in the Perf command exceed the available counters, the kernel uses time multiplexing to 
+give each event a chance to count.
+
+example:
+ perf stat with 6 PMU events [ latest AMD/Intel cpus support 6 PMC counters per thread.. if we specify 6 events, then each
+ one PMC counter per event used]
+
+amd@data-n-1:~/mohan/src$ /usr/lib/linux-tools-5.4.0-170/perf stat -e cycles,cache-misses,instructions,branch-misses,cache-references,stalled-cycles-backend  sleep 2                 
+ Performance counter stats for 'sleep 2':
+
+           343,988      cycles:u
+             5,826      cache-misses:u            #   33.973 % of all cache refs
+           237,569      instructions:u            #    0.69  insn per cycle
+             4,597      branch-misses:u
+            17,149      cache-references:u
+                 0      stalled-cycles-backend:u  #    0.00% backend cycles idle
+
+       2.057271898 seconds time elapsed
+
+       0.000000000 seconds user
+       0.057213000 seconds sys
+
+
+perf stat with  7 PMU events: [ since more than 6, existing counters(6) will be time shared among 7 events]
+
+
+amd@data-n-1:~/mohan/src$ /usr/lib/linux-tools-5.4.0-170/perf stat -e cycles,cache-misses,instructions,branch-misses,cache-references,stalled-cycles-backend,stalled-cycles-frontend  sleep 2
+
+ Performance counter stats for 'sleep 2':
+
+                 0      cycles:u                                                      (47.72%)
+             5,247      cache-misses:u            #   29.529 % of all cache refs      (99.34%)
+           237,549      instructions:u
+                                                  #    0.16  stalled cycles per insn
+             4,569      branch-misses:u
+            17,769      cache-references:u
+            38,939      stalled-cycles-backend:u  #    0.00% backend cycles idle
+                24      stalled-cycles-frontend:u                                     (52.94%)
+
+       2.039000805 seconds time elapsed
+
+       0.000000000 seconds user
+       0.038810000 seconds sys
+
+ Here PMC counters are shared among cycles(47.72%), cache-misses(99.34%), stalled-cycles-frontend(52.94%)
+
+
+[amd@anolis perf]$ sudo ./perf stat -a --metric-only -M backend_bound sleep 2
+
+ Performance counter stats for 'system wide':
+
+ %slots  backend_bound
+                  27.0
+
+       2.026125360 seconds time elapsed
+
+sudo ./perf stat -a --metric-only -M backend_bound -M frontend_bound -M backend_bound_by_memory -M frontend_bound_by_latency sleep 2
+
+
+ backend_bound
+  frontend_bound
+  backend_bound_by_cpu
+  backend_bound_by_memory
+  frontend_bound_by_bandwidth
+  frontend_bound_by_latency
+
+[amd@anolis perf]$ sudo ./perf stat -a --metric-only -M backend_bound -M frontend_bound -M backend_bound_by_memory -M frontend_bound_by_latency sleep 2
+
+ Performance counter stats for 'system wide':
+
+ %slots  backend_bound_by_memory %slots  backend_bound %slots  frontend_bound_by_latency %slots  frontend_bound
+                            33.9                   35.0                               34.2                    46.4
+
+       2.015557959 seconds time elapsed
+
+[amd@anolis perf]$ sudo perf stat -a --metric-only -M backend_bound -M frontend_bound -M backend_bound_by_memory -M frontend_bound_by_latency sleep 2
+[amd@anolis perf]$
+[amd@anolis perf]$ lscpu | grep -i model
+Model name:                           AMD Eng Sample: 100-000001051-02
+Model:                                80

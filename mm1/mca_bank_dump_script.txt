@@ -1,0 +1,173 @@
+#!/bin/bash
+###############################################################################
+# smca_dump_decode.sh
+#   All-in-one SMCA bank dumper + decoder for AMD (Zen/EPYC/Ryzen) systems.
+#   - Dumps MCA_CTL/STATUS/ADDR/MISC/CONFIG/IPID/SYND/DESTAT/DEADDR per bank
+#   - Decodes IPID -> HardwareID:McaType -> IP-block name
+#   - Decodes MCA_STATUS flag bits and error codes
+#
+#   Usage:  sudo ./smca_dump_decode.sh [CPU]
+#           sudo ./smca_dump_decode.sh 0        # default CPU 0
+###############################################################################
+
+CPU=${1:-0}
+
+# --- SMCA MSR bases (per-bank stride = 0x10) ---
+MCA_CTL=0xC0002000
+MCA_STATUS=0xC0002001
+MCA_ADDR=0xC0002002
+MCA_MISC0=0xC0002003
+MCA_CONFIG=0xC0002004
+MCA_IPID=0xC0002005
+MCA_SYND=0xC0002006
+MCA_DESTAT=0xC0002008
+MCA_DEADDR=0xC0002009
+
+# ---------------------------------------------------------------------------
+# Preconditions
+# ---------------------------------------------------------------------------
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: must run as root (need MSR access)." >&2
+  exit 1
+fi
+modprobe msr 2>/dev/null
+if ! command -v rdmsr >/dev/null 2>&1; then
+  echo "ERROR: rdmsr not found. Install msr-tools." >&2
+  exit 1
+fi
+
+# Detect number of banks from sysfs (fallback to 32)
+NBANKS=$(ls /sys/devices/system/machinecheck/machinecheck0/ 2>/dev/null | grep -c '^bank')
+[ "$NBANKS" -eq 0 ] && NBANKS=32
+
+echo "############################################################"
+echo "# SMCA Bank Dump + Decode   (CPU $CPU, $NBANKS banks)"
+echo "# Host: $(hostname)   Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+echo "############################################################"
+
+# ---------------------------------------------------------------------------
+# Helper: read an MSR, return full-width 16-hex-digit value (leading zeros kept)
+# ---------------------------------------------------------------------------
+read_msr() {
+  local msr=$1
+  local v
+  v=$(rdmsr -p "$CPU" "$msr" 2>/dev/null)
+  [ -z "$v" ] && v=0
+  printf "%016x" "0x$v"
+}
+
+# ---------------------------------------------------------------------------
+# Helper: decode IPID -> HWID:McaType -> IP block name
+# ---------------------------------------------------------------------------
+decode_ipid() {
+  local ipid=$((16#$1))
+  local hwid=$(( (ipid >> 32) & 0xFFF ))
+  local mcatype=$(( (ipid >> 48) & 0xFFFF ))
+  local name
+
+  case "$hwid,$mcatype" in
+    1,0)   name="LS - Load/Store Unit";;
+    1,1)   name="LS_V2 - Load/Store Unit v2";;
+    1,2)   name="MA_LLC - Mem-Attached Last Level Cache";;
+    2,0)   name="IF - Instruction Fetch Unit";;
+    3,0)   name="L2_CACHE";;
+    5,0)   name="DE - Decode Unit";;
+    6,0)   name="EX - Execution Unit";;
+    7,0)   name="FP - Floating Point Unit";;
+    8,0)   name="L3_CACHE";;
+    9,0)   name="CS - Coherent Slave";;
+    9,1)   name="CS_V2 - Coherent Slave v2";;
+    10,0)  name="PIE - Power/Interrupts/Etc";;
+    16,0)  name="UMC - Unified Memory Controller";;
+    16,1)  name="UMC_V2 - Unified Memory Controller v2";;
+    17,0)  name="PB - Parameter Block";;
+    19,0)  name="PSP - Platform Security Processor";;
+    19,1)  name="PSP_V2";;
+    20,0)  name="SMU - System Management Unit";;
+    20,1)  name="SMU_V2";;
+    21,0)  name="MP5";;
+    22,0)  name="MPDMA";;
+    23,0)  name="NBIO - Northbridge IO";;
+    24,0)  name="PCIE - PCIe Root Port";;
+    24,1)  name="PCIE_V2";;
+    25,0)  name="XGMI_PCS";;
+    26,0)  name="NBIF";;
+    27,0)  name="SHUB";;
+    28,0)  name="SATA";;
+    29,0)  name="USB";;
+    30,0)  name="GMI_PCS";;
+    31,0)  name="WAFL_PCS";;
+    70,0)  name="GMI_PHY";;
+    *)     name="UNKNOWN (newer/unreleased IP - check platform PPR/MCA Bank Info Table)";;
+  esac
+
+  printf "HWID=0x%03X McaType=0x%04X -> %s" "$hwid" "$mcatype" "$name"
+}
+
+# ---------------------------------------------------------------------------
+# Helper: decode MCA_STATUS flag bits + error codes
+# ---------------------------------------------------------------------------
+decode_status() {
+  local st=$((16#$1))
+  [ "$st" -eq 0 ] && { echo "no error (STATUS=0)"; return; }
+
+  local flags=""
+  (( (st >> 63) & 1 )) && flags+="VAL "
+  (( (st >> 62) & 1 )) && flags+="OVER "
+  (( (st >> 61) & 1 )) && flags+="UC "
+  (( (st >> 60) & 1 )) && flags+="EN "
+  (( (st >> 59) & 1 )) && flags+="MISCV "
+  (( (st >> 58) & 1 )) && flags+="ADDRV "
+  (( (st >> 57) & 1 )) && flags+="PCC "
+  (( (st >> 56) & 1 )) && flags+="DEFERRED "
+  (( (st >> 55) & 1 )) && flags+="POISON "
+  (( (st >> 44) & 1 )) && flags+="TCC "
+  (( (st >> 43) & 1 )) && flags+="SYNDV "
+
+  # Corrected vs Uncorrected summary
+  local ce="Corrected (CE)"
+  (( (st >> 61) & 1 )) && ce="Uncorrected (UC)"
+
+  local errcode=$(( st & 0xFFFF ))
+  local errcodeext=$(( (st >> 16) & 0x3F ))
+
+  printf "%s| %s | ErrorCode=0x%04X ErrorCodeExt=0x%02X" \
+         "$flags" "$ce" "$errcode" "$errcodeext"
+}
+
+# ---------------------------------------------------------------------------
+# Main loop
+# ---------------------------------------------------------------------------
+for b in $(seq 0 $((NBANKS-1))); do
+  ctl=$(read_msr    $((MCA_CTL    + b*16)))
+  status=$(read_msr $((MCA_STATUS + b*16)))
+  addr=$(read_msr   $((MCA_ADDR   + b*16)))
+  misc=$(read_msr   $((MCA_MISC0  + b*16)))
+  config=$(read_msr $((MCA_CONFIG + b*16)))
+  ipid=$(read_msr   $((MCA_IPID   + b*16)))
+  synd=$(read_msr   $((MCA_SYND   + b*16)))
+  destat=$(read_msr $((MCA_DESTAT + b*16)))
+  deaddr=$(read_msr $((MCA_DEADDR + b*16)))
+
+  echo ""
+  echo "=== Bank $b ==="
+  if [ "$ipid" = "0000000000000000" ]; then
+    echo "  (unpopulated / disabled bank - IPID=0)"
+    continue
+  fi
+
+  echo "  MCA_IPID   = 0x$ipid   [ $(decode_ipid "$ipid") ]"
+  echo "  MCA_CTL    = 0x$ctl"
+  echo "  MCA_CONFIG = 0x$config"
+  echo "  MCA_STATUS = 0x$status   [ $(decode_status "$status") ]"
+  echo "  MCA_ADDR   = 0x$addr"
+  echo "  MCA_MISC0  = 0x$misc"
+  echo "  MCA_SYND   = 0x$synd"
+  echo "  MCA_DESTAT = 0x$destat"
+  echo "  MCA_DEADDR = 0x$deaddr"
+done
+
+echo ""
+echo "############################################################"
+echo "# Decode complete. Banks with STATUS VAL bit set have logged errors."
+echo "############################################################"

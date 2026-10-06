@@ -1,0 +1,83 @@
+BIOS PCI segment setting option:
+
+BIOS => Advanced => AMD CBS => DF common options => Probe filter => Number of PCI segments
+
+With patches:
+
+root@volcano9dee-host:/home/amd# uname -a
+Linux volcano9dee-host 5.15.152withpatches+ #54 SMP Thu May 29 10:17:35 IST 2025 x86_64 GNU/Linux
+
+root@volcano9dee-host:/home/amd# dmesg | grep -i domain | grep MMC
+[    0.744728] PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0x3ffb00000000-0x3ffb0fffffff] (base 0x3ffb00000000)
+[    0.744731] PCI: MMCONFIG for domain 0001 [bus 00-ff] at [mem 0x3ffb10000000-0x3ffb1fffffff] (base 0x3ffb10000000)
+[    0.744732] PCI: MMCONFIG for domain 0002 [bus 00-ff] at [mem 0x3ffb20000000-0x3ffb2fffffff] (base 0x3ffb20000000)
+[    0.744738] PCI: MMCONFIG for domain 0003 [bus 00-ff] at [mem 0x3ffb30000000-0x3ffb3fffffff] (base 0x3ffb30000000)
+[    0.837678] PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0x3ffb00000000-0x3ffb0fffffff] (base 0x3ffb00000000)
+[    0.837680] PCI: MMCONFIG for domain 0001 [bus 00-ff] at [mem 0x3ffb10000000-0x3ffb1fffffff] (base 0x3ffb10000000)
+[    0.837682] PCI: MMCONFIG for domain 0002 [bus 00-ff] at [mem 0x3ffb20000000-0x3ffb2fffffff] (base 0x3ffb20000000)
+[    0.837683] PCI: MMCONFIG for domain 0003 [bus 00-ff] at [mem 0x3ffb30000000-0x3ffb3fffffff] (base 0x3ffb30000000)
+
+ ==> multiple domains [ 4 pci segments]
+
+root@volcano9dee-host:/home/amd# lspci -nn | grep -i sam
+0000:41:00.0 Non-Volatile memory controller [0108]: Samsung Electronics Co Ltd NVMe SSD Controller PM174X [144d:a826]
+0000:42:00.0 Non-Volatile memory controller [0108]: Samsung Electronics Co Ltd NVMe SSD Controller PM174X [144d:a826]
+0001:41:00.0 Non-Volatile memory controller [0108]: Samsung Electronics Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO [144d:a80a]
+0003:81:00.0 Non-Volatile memory controller [0108]: Samsung Electronics Co Ltd NVMe SSD Controller PM174X [144d:a826]
+0003:82:00.0 Non-Volatile memory controller [0108]: Samsung Electronics Co Ltd NVMe SSD Controller PM174X [144d:a826]
+
+===> NVMe SSD Controller attached to different domains
+
+root@volcano9dee-host:/home/amd# dmesg | grep pci | grep nvme
+[    1.481692] nvme nvme0: pci function 0001:41:00.0
+[    1.481827] nvme nvme1: pci function 0000:41:00.0
+[    1.481932] nvme nvme2: pci function 0000:42:00.0
+[    1.482109] nvme nvme3: pci function 0003:81:00.0
+[    1.482193] nvme nvme4: pci function 0003:82:00.0
+
+===>SSDs attached to different domains
+
+root@volcano9dee-host:/home/amd# lsblk
+NAME                             MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+nvme0n1                          259:0    0 476.9G  0 disk
+├─nvme0n1p1                      259:1    0   512M  0 part /boot/efi
+├─nvme0n1p2                      259:2    0   488M  0 part /boot
+└─nvme0n1p3                      259:3    0   476G  0 part
+  ├─volcano9dee--host--vg-root   254:0    0  27.9G  0 lvm  /
+  ├─volcano9dee--host--vg-swap_1 254:1    0   976M  0 lvm  [SWAP]
+  └─volcano9dee--host--vg-home   254:2    0 447.1G  0 lvm  /home
+nvme3n1                          259:7    0   3.5T  0 disk
+├─test_vg-test_lv1               254:3    0     2T  0 lvm  /tests
+└─test_vg-src_lv1                254:4    0   1.5T  0 lvm  /vms
+nvme2n1                          259:8    0   3.5T  0 disk
+├─nvme2n1p1                      259:10   0   600M  0 part
+├─nvme2n1p2                      259:11   0     1G  0 part
+└─nvme2n1p3                      259:12   0   3.5T  0 part
+  ├─ao_anolis-swap               254:7    0    32G  0 lvm  [SWAP]
+  ├─ao_anolis-home               254:9    0   3.4T  0 lvm
+  └─ao_anolis-root               254:10   0    70G  0 lvm
+nvme1n1                          259:9    0   3.5T  0 disk
+├─nvme1n1p1                      259:13   0   600M  0 part
+├─nvme1n1p2                      259:14   0     1G  0 part
+└─nvme1n1p3                      259:15   0   3.5T  0 part
+  ├─openeuler-swap               254:5    0     4G  0 lvm  [SWAP]
+  ├─openeuler-home               254:6    0   3.4T  0 lvm
+  └─openeuler-root               254:8    0    70G  0 lvm
+
+ ====> LVMs created on different SSDs , which are attached to different domains
+
+
+1. Without backported patches:
+   [ screenshot 1 ]
+
+   Single domain, all nvme SSDs connected to a single domain
+
+2. With patches 
+
+   [ screenshot 2]
+
+   Multiple domains [ 4 segments ] & nmve SSDs are connected to different domains
+
+3. Created File system on different disks & done basic dd command runs
+
+4. Disk PCI passthrough to a VM. Created file system & tested with basic dd command.

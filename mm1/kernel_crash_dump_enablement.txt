@@ -1,0 +1,231 @@
+# yum install kexec-tools # yum list installed | grep kexec-tools
+
+# cat /proc/iomem | grep -i crash
+27000000-370fffff : Crash kernel
+
+# dmesg | grep -e "Reserving .* crashkernel"
+[0.000000] Reserving 257MB of memory at 624MBfor crashkernel (System RAM: 15356MB)
+
+OL7 systems - update the /etc/default/grub file [GRUB_CMDLINE_LINUX= line] 
+   and re-generate the grub.cfg [grub2-mkconfig -o /boot/grub2/grub.cfg]
+
+To set: add 'console=tty0 console=ttyS0,115200n8' 
+
+
+Enabling KDB on the system:
+############################
+in /etc/default/grub, set :
+
+GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet ekgdboc=kbd earlyprintk=vga console=tty0 console=ttyS0,115200n8"
+GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet ekgdboc=kbd earlyprintk=vga console=tty0 console=ttyS0,115200n8"
+
+then run:
+
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+############################
+
+entering into kdb:
+
+When logged in as root or with a super user session you can run:
+
+echo g > /proc/sysrq-trigger
+
+
+
+# Compile-time checks and compiler options
+#
+CONFIG_DEBUG_INFO=y
+
+
+CONFIG_KGDB_KDB=y
+CONFIG_GDB_SCRIPTS=y
+
+
+Building Linux with debug symbols:
+######################################
+
+# copy .config from the host linux
+cp /boot/config-`uname -r`* .config
+
+# make sure at least below options are enabled
+vim .config
+	CONFIG_DEBUG_KERNEL=y
+	CONFIG_FRAME_POINTER=y
+	CONFIG_KGDB=y
+	CONFIG_KGDB_SERIAL_CONSOLE=y
+	CONFIG_DEBUG_INFO=y
+
+# modify the identifying string for my custom kernel
+vim .config
+	CONFIG_LOCALVERSION="test01"
+
+########################################
+
+
+GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet ekgdboc=kbd earlyprintk=vga console=ttyS0,115200 kgdboc=ttyS0,115200 nokaslr"
+
+(hd3,gpt3)
+set root=(lvm/openeuler-root)
+set root=(hd3,gpt2)
+linux /vmlinuz-5.10.0-182.0.0.95.oe2203sp3.x86_64 
+initrd /initramfs-5.10.0-182.0.0.95.oe2203sp3.x86_64.img
+
+grub> ls
+(proc) (lvm/ubuntu--vg-ubuntu--lv) (lvm/openeuler-root) (lvm/openeuler-home) 
+(lvm/openeuler-swap) (lvm/test_vg-src_lv1) (lvm/test_vg-test_lv1) (lvm/ao-root)
+(lvm/ao-home) (lvm/ao-swap) (hd0) (hd0,gpt3) (hd0,gpt2) (hd0,gpt1) (hd1) (hd2) 
+(hd3) (hd3,gpt3) (hd3,gpt2) (hd3,gpt1) (hd4) (hd4,gpt3) (hd4,gpt2) (hd4,gpt1) 
+grub> 
+
+grub> ls (hd3,gpt2)/
+./ ../ lost+found/ efi/ grub2/ dracut/ 
+System.map-5.10.0-182.0.0.95.oe2203sp3.x86_64 
+config-5.10.0-182.0.0.95.oe2203sp3.x86_64 
+symvers-5.10.0-182.0.0.95.oe2203sp3.x86_64.gz 
+vmlinuz-5.10.0-182.0.0.95.oe2203sp3.x86_64 loader/ 
+initramfs-5.10.0-182.0.0.95.oe2203sp3.x86_64.img System.map 
+.vmlinuz-5.10.0-182.0.0.95.oe2203sp3.x86_64.hmac 
+initramfs-0-rescue-2289aca2ebf041dead5d47b33070e44d.img 
+vmlinuz-0-rescue-2289aca2ebf041dead5d47b33070e44d 
+initramfs-5.10.0-182.0.0.95.oe2203sp3.x86_64kdump.img vmlinuz-5.10.0dbg1+ 
+System.map-5.10.0dbg1+ vmlinuz initramfs-5.10.0dbg1+.img 
+vmlinuz-5.10.0buggycode+ System.map-5.10.0buggycode+ 
+initramfs-5.10.0buggycode+.img 
+grub> 
+
+grub> help
+. (0+)  Load another config file without changing context.
+[ (0+)  Evaluate an expression.
+acpi (1+)       Load host ACPI tables and tables specified by arguments.
+authenticate (0+)       Check whether user is in USERLIST.
+backtrace (0+)  Print backtrace.
+badram (0+)     Declare memory regions as faulty (badram).
+bls_import (1+) Import Boot Loader Specification snippets.
+blscfg (1+)     Import Boot Loader Specification snippets.
+boot (0+)       Boot an operating system.
+break (0+)      Exit from loops
+btrfs-get-default-subvol (1+)   Print default BtrFS subvolume on DEVICE.
+btrfs-info (0+) Print BtrFS info about DEVICE.
+btrfs-list-subvols (1+) Print list of BtrFS subvolumes on DEVICE.
+btrfs-mount-subvol (0+) Set btrfs DEVICE the DIRECTORY a mountpoint of
+SUBVOL.
+cat (1+)        Show the contents of a file.
+cat (0-)        Show the contents of a file.
+chainloader (0+)        Load another boot loader.
+clear (0+)      Clear the screen.
+configfile (0+) Load another config file.
+continue (0+)   Continue loops
+cryptomount (1+)        Mount a crypto device.
+cutmem (0+)     Remove any memory regions in specified range.
+decrement (0+)  decrement VARIABLE
+distrust (0+)   Remove PUBKEY_ID from trusted keys.
+dump (0+)       Show memory contents.
+echo (1+)       Display a line of text.
+exit (0+)       Exit from GRUB.
+export (0+)     Export variables.
+extract_entries_configfile (0+) Load another config file but take only
+menu entries.
+extract_entries_source (0+)     Load another config file without changing
+context but take only menu entries.
+extract_syslinux_entries_configfile (1+)        Execute syslinux config in new
+context taking only menu entries
+extract_syslinux_entries_source (1+)    Execute syslinux config in same
+context taking only menu entries
+fwsetup (0+)    Reboot into firmware setup menu.
+gettext (1+)    Translates the string with the current settings.
+halt (0+)       Halts the computer.  This command does not work on all
+firmware implementations.
+help (0+)       Show this message.
+increment (0+)  increment VARIABLE
+initrd (0+)     Load initrd.
+initrdefi (0+)  Load initrd.
+insmod (0+)     Insert a module.
+keymap (0+)     Load a keyboard layout.
+linux (0+)      Load Linux.
+linuxefi (0+)   Load Linux.
+list_env (1+)   List variables from environment block file.
+list_trusted (0+)       Show the list of trusted keys.
+load_env (1+)   Load variables from environment block file.
+loadfont (0+)   Specify one or more font files to load.
+loopback (1+)   Make a virtual drive from a file.
+ls (0+) List devices or files.
+lsefi (0+)      Display EFI handles.
+lsefimmap (0+)  Display EFI memory map.
+lsfonts (0+)    List the loaded fonts.
+lsmod (0+)      Show loaded modules.
+menuentry (1+)  Define a menu entry.
+net_add_addr (0+)       Add a network address.
+net_add_dns (0+)        Add a DNS server
+net_add_route (0+)      Add a network route.
+net_bootp (0+)  perform a bootp autoconfiguration
+net_bootp6 (0+) perform a DHCPv6 autoconfiguration
+net_del_addr (0+)       Delete a network address.
+net_del_dns (0+)        Remove a DNS server
+net_del_route (0+)      Delete a network route.
+net_dhcp (0+)   perform a DHCP autoconfiguration
+net_get_dhcp_option (0+)        retrieve DHCP option and save it into VAR. If
+VAR is - then print the value.
+net_ipv6_autoconf (0+)  Perform an IPV6 autoconfiguration
+net_ls_addr (0+)        list network addresses
+net_ls_cards (0+)       list network cards
+net_ls_dns (0+) List DNS servers
+net_ls_routes (0+)      list network routes
+net_nslookup (0+)       Perform a DNS lookup
+normal (0+)     Enter normal mode.
+normal_exit (0+)        Exit from normal mode.
+password_pbkdf2 (0+)    Set user password (PBKDF2). 
+reboot (0+)     Reboot the computer.
+regexp (1+)     Test if REGEXP matches STRING.
+reset (0+)      Reboot the computer.
+return (0+)     Return from a function.
+rmmod (0+)      Remove a module.
+save_env (1+)   Save variables to environment block file.
+search (1+)     Search devices by file, filesystem label or filesystem UUID.
+If --set is specified, the first device found is set to a variable. If no
+variable name is specified, `root' is used.
+search.file (0+)        Search devices by file. If VARIABLE is specified, the
+first device found is set to a variable.
+search.fs_label (0+)    Search devices by label. If VARIABLE is specified,
+the first device found is set to a variable.
+search.fs_uuid (0+)     Search devices by UUID. If VARIABLE is specified,
+the first device found is set to a variable.
+serial (1+)     Configure serial port.
+set (0+)        Set an environment variable.
+setparams (0+)  Set positional parameters.
+shift (0+)      Shift positional parameters.
+sleep (1+)      Wait for a specified number of seconds.
+source (0+)     Load another config file without changing context.
+submenu (1+)    Define a submenu.
+syslinux_configfile (1+)        Execute syslinux config in new context
+syslinux_source (1+)    Execute syslinux config in same context
+terminal_input (0+)     List or select an input terminal.
+terminal_output (0+)    List or select an output terminal.
+terminfo (1+)   Set terminfo type of TERM to TYPE.
+
+test (0+)       Evaluate an expression.
+trust (1+)      Add PUBKEY_FILE to trusted keys.
+unset (0+)      Remove an environment variable.
+verify_detached (1+)    Verify detached signature.
+version (0+)    Print version and build information.
+grub> 
+
+menuentery from /boot/grub2/grub.cfg:
+
+menuentry 'openEuler (5.10.0sep_6+) 22.03 (LTS-SP3)' --class openeuler --class gnu-linux --class gnu --class os --unrestricted $menuentry_id_option 'gnulinux-5.10.0with_dd_patch_iommu_patch+-advanced-ed915d1c-0962-4362-9a2d-cedfe3137c32' {
+        load_video
+        set gfxpayload=keep
+        insmod gzio
+        insmod part_gpt
+        insmod ext2
+        set root='hd0,gpt2'
+        if [ x$feature_platform_search_hint = xy ]; then
+          search --no-floppy --fs-uuid --set=root --hint='hd0,gpt2'  7df68e30-03f6-453d-9d10-7ac95f7893c3
+        else
+          search --no-floppy --fs-uuid --set=root 7df68e30-03f6-453d-9d10-7ac95f7893c3
+        fi
+        echo 'Loading openEuler (5.10.0sep_6+) 22.03 (LTS-SP3)'
+        linux   /vmlinuz-5.10.0sep_6+ root=/dev/mapper/openeuler00-root ro resume=/dev/mapper/openeuler-swap rd.lvm.lv=openeuler00/root rd.lvm.lv=openeuler/swap rd.lvm.lv=openeuler00/swap cgroup_disable=files apparmor=0 crashkernel=512M amd_iommu=force_isolation,fullflush iommu.passthrough=0 iommu=nopt
+        echo 'Loading initial ramdisk ...'
+        initrd  /initramfs-5.10.0sep_6+.img
+}

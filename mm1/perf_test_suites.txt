@@ -1,0 +1,52 @@
+
+1) perftool-testsuite source repo:
+################################################################
+   https://github.com/rfmvh/perftool-testsuite
+
+git checkout:
+
+  git clone https://github.com/rfmvh/perftool-testsuite
+
+Running tests:
+ 
+Full test:
+
+ # ./test_driver.sh ==> will  execute all tests [ run as root user ]
+ 
+ Note: change "TESTING_SET['x86_64']="annotate buildid list probe report stat trace" in /test_driver.sh to choose test cases
+
+Running single test:
+
+ # cd ./perftool-testsuite/base_stat
+ # ./test_pmu.sh
+-- [ PASS ] -- perf_stat :: test_pmu :: event branch-instructions
+-- [ PASS ] -- perf_stat :: test_pmu :: event branch-misses
+-- [ PASS ] -- perf_stat :: test_pmu :: event cache-misses
+-- [ PASS ] -- perf_stat :: test_pmu :: event cache-references
+-- [ PASS ] -- perf_stat :: test_pmu :: event cpu-cycles
+-- [ PASS ] -- perf_stat :: test_pmu :: event instructions
+-- [ PASS ] -- perf_stat :: test_pmu :: event stalled-cycles-backend
+-- [ PASS ] -- perf_stat :: test_pmu :: event stalled-cycles-frontend
+## [ PASS ] ## perf_stat :: test_pmu SUMMARY
+
+################################################################
+
+2) perf_events_test suite
+################################################################
+   site : https://github.com/deater/perf_event_tests
+
+  a) events test:
+     # git clone https://github.com/deater/perf_event_tests
+     # cd  perf_event_tests
+     # make
+     # sysctl kernel.perf_event_paranoid=2
+     # ./run_tests.sh
+  
+   b) fuzzer test:
+     # git clone https://github.com/deater/perf_event_tests [ you can use code cloned & built in step 'a' ]
+     # cd  perf_event_tests
+     # make
+     # cd  fuzzer
+     # sysctl kernel.perf_event_paranoid=2
+     #./perf_fuzzer -t OC -s 20000
+################################################################

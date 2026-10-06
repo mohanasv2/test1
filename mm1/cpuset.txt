@@ -1,0 +1,46 @@
+
+
+
+1) cd /sys/fs/cgroup
+2) mkdir muthu_cpuset
+3) cd muthu_cpuset
+4) echo 48-95 > cpuset.cpus
+5) echo 0 > cpuset.mems
+6) Go to the shell [ or session ] from which you want to start the worklod
+7) Run "echo $$ " => gives you current shell pid
+8) Enter the shell pid into :
+   echo <shell pid in step 7> > cgroup.procs
+9) Start your workload from the shell [ whose pid configured to the cgroup ]
+
+
+cpuset controllers in cgroup:
+
+cat /sys/fs/cgroup/cgroup.controllers
+cpuset cpu io memory hugetlb pids rdma misc
+
+/etc/default/grub:
+ systemd.unified_cgroup_hierarchy=1
+
+RHEL: Enabling cgroup v2 during boot time:
+
+  # grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=1"
+  after reboot [ system on ] check whether cgroup V2 mounted:
+  # root@mohandev:/sys/fs/cgroup# mount -l | grep cgroup
+   cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,nsdelegate,memory_recursiveprot)
+
+ 
+
+If cgroup does not contain cpuset controllers, then use following steps to mount the cpuset controllers:
+
+steps:
+1) mkdir /sys/fs/cgroup/cpuset
+2) mount -t cgroup -o cpuset cpuset /sys/fs/cgroup/cpuset
+3) cd  /sys/fs/cgroup/cpuset; mkdir mohan_cpuset
+4)  /bin/echo 1 > cpuset.cpu_exclusive
+5) /bin/echo 0-7 > cpuset.cpus
+6) /bin/echo 0-7 > cpuset.mems
+7) /bin/echo $$ > tasks   [ attach your shell to this cpu set ] == old method
+
+8) /bin/echo $$ > cgroup.procs  == newer method
+
+9) Now run your program/workload from the current shell, all will contained to the cpus 0-7

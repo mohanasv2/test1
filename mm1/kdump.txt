@@ -1,0 +1,310 @@
+Doc:   https://www.kernel.org/doc/Documentation/kdump/kdump.txt
+
+/proc/kcore - live kernel debugging
+/proc/vmcore - post analysis
+/proc/iomem  [ cat /proc/iomem   | grep -i crash => crash kernel loaded address ]
+
+kexec_load() system call loads the kdump kernel into reserved main memory [ crahskernel=512M command line arg ]
+
+
+linux command line:
+
+[root@localhost 127.0.0.1-2025-03-21-16:52:06]# cat /proc/cmdline
+BOOT_IMAGE=(hd0,gpt2)/vmlinuz-6.6.68-20.oc9.x86_64 root=/dev/mapper/opencloudos-root ro crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M rd.lvm.lv=opencloudos/root rhgb quiet
+
+ ==> crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M
+
+console=ttyS1 [ add in /etc/default/grub Linux commandline & run grub2-mkconfig -o /boot/grub2/grub.cfg  or /boot/efi/EFI/<distro>/grub.cfg]
+
+/etc/kdump.conf
+rpm -q kexec-tools
+
+systemctl enable kdump.service
+systemctl status kdump.service
+
+
+ echo c > /proc/sysrq-trigger 
+
+# cat /proc/cmdline
+BOOT_IMAGE=/boot/vmlinuz-6.14.0-rc7-next-20250317-snp-host-f2a41ff576cc-dirty root=UUID=d72a6d1c-06cf-4b79-af43-f1bac4f620f9 ro console=ttyS0,115200n8 earlyprintk efi=debug sevguest.dyndbg swiotlb=force swiotlb=262144 crashkernel=512M
+...
+# /sbin/kexec -p --command-line="BOOT_IMAGE=/boot/vmlinuz-6.14.0-rc7-next-20250317-snp-host-f2a41ff576cc-dirty root=UUID=d72a6d1c-06cf-4b79-af43-f1bac4f620f9 ro console=ttyS0,115200n8 earlyprintk efi=debug sevguest.dyndbg swiotlb=force swiotlb=262144 reset_devices systemd.unit=kdump-tools-dump.service nr_cpus=1 irqpoll nousb" --initrd=/var/lib/kdump/initrd.img /var/lib/kdump/vmlinuz
+#  echo c > /proc/sysrq-trigger
+
+
+qemu-system-x86_64: virtio: zero sized buffers are not allowed
+qemu-system-x86_64: cpus are not resettable, terminating
+
+
+10:11:37 - 10:26:23
+
+
+./makedumpfile -c -d 31 /proc/vmcore /var/crash/mm1
+
+10.86.20.255 -  anolis
+10.86.16.106 - cloudos_bios
+10.86.21.158 -  mm_cloudos92_sev
+10.86.23.154 -  mm-cloudos-sev2
+
+kexec -p /boot/vmlinuz-6.6.70-24.oc9.x86_64 --initrd /boot/initramfs-6.6.70-24.oc9.x86_64kdump.img  --reuse-cmdline --append "irqpoll nr_cpus=1"
+
+It is necessary to remove "swiotlb" from "kdump_command_line_append" in /etc/sysconfig/kdump; otherwise, the kernel version 6.14 will continue to hang.
+
+No, VM kdump (kernel crash dumping for virtual machines) likely will not work if host kdump 
+is disabled on a  Linux system, as the host kdump functionality is crucial for capturing the
+ crash dump. 
+
+As per customer's "kdump-v6.14.log", they had tested 6.14-rc6 kernel with RHEL and Ubuntu SNP VMs, which worked for them. 
+
+We have tested  with OpenCloudOS as the SNP host & the SNP guest in the following two scenarios.
+
+Test scenario 1: [ Host & guest , both are OpenCloudOS, problem reproduction ]
+   Host  -  OpenCloudOS 6.6 kernel + Cutomer SNP host patches  
+   Guest -  OpenCloudOS 6.6 kernel + Cutomer SNP guest patches  (SNP VM)
+
+    => When  "echo c > /proc/sysrq-trigger" ran on SNP guest, the guest did not create kdump under /var/crash and the VM hung.
+
+Test scenario 2: [ Host and guest with OpenCloudOS, with 6.14-rc6 & 6.14-rc7 kernels ]
+
+  Host  -  OpenCloudOS with kernel v6.14-rc6  (SNP Host)
+  Guest -  OpenCloudOS with kernel v6.14-rc7  (SNP VM)
+
+However, OpenCloudOS with 6.14-rc6 kernel as SNP host and OpenCloudOS with 6.14-r7 kernel as SNP guest, the kdump is still not created under /var/crash dir & the
+VM hangs. Doing further analysis on this.
+
+In the above two scenarios, the SEV guest and the normal guest ( with OpenCloudOS 6.6 kernel & v6.14-rc7 kernel), the kdump works fine & generates vmcore.
+
+Host:
+[amd@volcano99fc-host kdump]$ uname -a
+Linux volcano99fc-host 6.14.0-rc6stable_1 #6 SMP PREEMPT_DYNAMIC Fri Mar 21 15:26:12 IST 2025 x86_64 GNU/Linux
+[amd@volcano99fc-host kdump]$ cat /etc/*rel*
+OpenCloudOS release 9.0
+NAME="OpenCloudOS"
+VERSION="9.0"
+ID="opencloudos"
+ID_LIKE="opencloudos"
+VERSION_ID="9.0"
+PLATFORM_ID="platform:oc9.0"
+PRETTY_NAME="OpenCloudOS 9.0"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:opencloudos:opencloudos:9.0"
+HOME_URL="https://www.opencloudos.org/"
+BUG_REPORT_URL="https://bugs.opencloudos.tech/"
+OpenCloudOS release 9.0
+cpe:/o:opencloudos:opencloudos:9.0
+[amd@volcano99fc-host kdump]$
+
+Guest:
+NAME="OpenCloudOS"
+VERSION="9.2"
+ID="opencloudos"
+ID_LIKE="opencloudos"
+VERSION_ID="9.2"
+PLATFORM_ID="platform:oc9"
+PRETTY_NAME="OpenCloudOS 9.2"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:opencloudos:opencloudos:9"
+HOME_URL="https://www.opencloudos.org/"
+BUG_REPORT_URL="https://bugs.opencloudos.tech/"
+
+Linux cloudos-sev2 6.14.0-rc7stable_2 #7 SMP PREEMPT_DYNAMIC Mon Mar 24 16:40:28 IST 2025 x86_64 x86_64 x86_64 GNU/Linux
+
+dmesg | grep SNP
+[    0.616621] Memory Encryption Features active: AMD SEV SEV-ES SEV-SNP
+[    0.616642] SEV: Status: SEV SEV-ES SEV-SNP
+[    0.884636] SEV: Using SNP CPUID table, 28 entries present.
+[    0.884640] SEV: SNP running at VMPL0.
+[    1.131157] SEV: SNP guest platform device initialized.
+
+OpenCloudOS with 6.14-rc6 kernel as SNP host and OpenCloudOS with 6.14-r7 kernel as SNP guest, the kdump is still not created under /var/crash dir & the
+VM hangs. Doing further analysis on this.
+
+Host and Guest  test commands & output:
+
+OpenCloudOS 6.14-rc6 kernel SNP Host:
+#######################################################################################
+
+#uname -a
+Linux volcano99fc-host 6.14.0-rc6stable_1 #6 SMP PREEMPT_DYNAMIC Fri Mar 21 15:26:12 IST 2025 x86_64 GNU/Linux
+
+# kexec -p /boot/vmlinuz-6.14.0-rc6stable_1 --initrd /boot/initramfs-6.14.0-rc6stable_1.img  --reuse-cmdline --append "irqpoll nr_cpus=1"
+
+# cat /proc/cmdline
+BOOT_IMAGE=(hd4,gpt2)/vmlinuz-6.14.0-rc6stable_1 root=/dev/mapper/opencloudos_volcano99fc--os-root ro crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M rd.lvm.lv=opencloudos_volcano99fc-os/root
+
+#grep swiotlb /etc/sysconfig/kdump
+KDUMP_COMMANDLINE_REMOVE="hugepages hugepagesz slub_debug quiet log_buf_len swiotlb cma hugetlb_cma ignition.firstboot"
+KDUMP_COMMANDLINE_APPEND="irqpoll nr_cpus=1 reset_devices cgroup_disable=memory mce=off numa=off udev.children-max=2 panic=10 acpi_no_memhotplug transparent_hugepage=never nokaslr hest_disable novmcoredd cma=0 hugetlb_cma=0 noefi brd.rd_nr=0 nbd.nbds_max=0 pty.legacy_count=0 swiotlb=noforce loop.max_loop=4 audit=0"
+
+# echo c > /proc/sysrq-trigger
+
+After crash:
+
+vmcore:
+[root@volcano99fc-host 127.0.0.1-2025-03-24-21:39:01]# file ./vmcore
+./vmcore: Kdump compressed dump v6, system Linux, node volcano99fc-host, release 6.14.0-rc6stable_1, version #6 SMP PREEMPT_DYNAMIC Fri Mar 21 15:26:12 IST 2025, machine x86_64, domain (none)
+
+dmesg:
+[    0.000000] Linux version 6.14.0-rc6stable_1 (amd@volcano99fc-host) (gcc (Tencent Compiler 12.3.1) 12.3.1 20230912 (OpenCloudOS 12.3.1-2), GNU ld (GNU Binutils) 2.41) #6 SMP PREEMPT_DYNAMIC Fri Mar 21 15:26:12 IST 2025
+[    0.000000] Command line: BOOT_IMAGE=(hd4,gpt2)/vmlinuz-6.14.0-rc6stable_1 root=/dev/mapper/opencloudos_volcano99fc--os-root ro crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M rd.lvm.lv=opencloudos_volcano99fc-os/root
+[    0.000000] SEV-SNP: RMP table physical range [0x0000018278900000 - 0x00000183fc9fffff]
+[    0.000000] BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009ffff] usable
+[    0.000000] BIOS-e820: [mem 0x00000000000a0000-0x00000000000fffff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x0000000075bbffff] usable
+[    0.000000] BIOS-e820: [mem 0x0000000075bc0000-0x0000000075c67fff] ACPI NVS
+ ......
+ ......
+[19264.755975] sysrq: Trigger a crash
+[19264.756295] Kernel panic - not syncing: sysrq triggered crash
+[19264.756532] CPU: 73 UID: 0 PID: 318304 Comm: bash Kdump: loaded Tainted: G            E      6.14.0-rc6stable_1 #6
+[19264.756769] Tainted: [E]=UNSIGNED_MODULE
+[19264.756997] Hardware name: AMD Corporation Volcano/Volcano, BIOS RVC100EB 01/16/2025
+[19264.757236] Call Trace:
+[19264.757475]  <TASK>
+[19264.757711]  panic+0x31c/0x380
+[19264.757951]  ? _printk+0x58/0x80
+[19264.758186]  sysrq_handle_crash+0x16/0x20
+.....
+.....
+
+#######################################################################################
+
+
+OpenCloudOS 6.14.0-rc7 SNP Guest:
+>>> removed "swiotlb" from "kdump_command_line_append" in /etc/sysconfig/kdump, but still hangs
+#######################################################################################
+#uname -a
+Linux cloudos-sev2 6.14.0-rc7stable_2 #7 SMP PREEMPT_DYNAMIC Mon Mar 24 16:40:28 IST 2025 x86_64 x86_64 x86_64 GNU/Linux
+
+#dmesg | grep SNP
+[    0.660722] Memory Encryption Features active: AMD SEV SEV-ES SEV-SNP
+[    0.660744] SEV: Status: SEV SEV-ES SEV-SNP
+[    0.923696] SEV: Using SNP CPUID table, 28 entries present.
+[    0.923704] SEV: SNP running at VMPL0.
+[    1.234567] SEV: SNP guest platform device initialized.
+
+#cat /proc/cmdline
+BOOT_IMAGE=(hd0,gpt2)/vmlinuz-6.14.0-rc7stable_2 root=/dev/mapper/opencloudos-root ro crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M rd.lvm.lv=opencloudos/root
+
+#grep swiotlb /etc/sysconfig/kdump
+KDUMP_COMMANDLINE_REMOVE="hugepages hugepagesz slub_debug quiet log_buf_len swiotlb cma hugetlb_cma ignition.firstboot"
+
+#kexec -p /boot/vmlinuz-6.14.0-rc7stable_2 --initrd /boot/initramfs-6.14.0-rc7stable_2.img  --reuse-cmdline --append "earlyprintk efi=debug sevguest.dyndbg reset_devices systemd.unit=kdump-tools-dump.service nr_cpus=1 irqpoll nousb"
+
+#echo c > /proc/sysrq-trigger
+
+
+After crash, OpenCloudOS 6.14-rc7  SNP guest hangs & no vmcore generated:
+###############################################
+ Booting `OpenCloudOS (6.14.0-rc7stable_2) 9.2'
+
+KVM: unknown exit reason 24
+EAX=00000000 EBX=00000000 ECX=00000000 EDX=00800f12
+ESI=00000000 EDI=00000000 EBP=00000000 ESP=00000000
+EIP=0000b004 EFL=00000002 [-------] CPL=0 II=0 A20=1 SMM=0 HLT=1
+ES =0000 00000000 0000ffff 00009300
+CS =f000 00800000 0000ffff 00009b00
+SS =0000 00000000 0000ffff 00009300
+DS =0000 00000000 0000ffff 00009300
+FS =0000 00000000 0000ffff 00009300
+GS =0000 00000000 0000ffff 00009300
+LDT=0000 00000000 0000ffff 00008200
+TR =0000 00000000 0000ffff 00008b00
+GDT=     00000000 0000ffff
+IDT=     00000000 0000ffff
+CR0=60000010 CR2=00000000 CR3=00000000 CR4=00000000
+DR0=0000000000000000 DR1=0000000000000000 DR2=0000000000000000 DR3=0000000000000000
+DR6=00000000ffff0ff0 DR7=0000000000000400
+EFER=0000000000000000
+Code=00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 <00> 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+
+################################################
+
+[ Note: Tried with crahskernel=512MB size on guest, same result ]
+
+Next steps:
+
+Trying with CentOS/RHEL SNP guest  on OpenCloudOS SNP Host
+
+#uname -a
+Linux cloudos-sev2 6.14.0-rc7stable_2 #7 SMP PREEMPT_DYNAMIC Mon Mar 24 16:40:28 IST 2025 x86_64 x86_64 x86_64 GNU/Linux
+
+#dmesg | grep SNP
+[    0.660722] Memory Encryption Features active: AMD SEV SEV-ES SEV-SNP
+[    0.660744] SEV: Status: SEV SEV-ES SEV-SNP
+[    0.923696] SEV: Using SNP CPUID table, 28 entries present.
+[    0.923704] SEV: SNP running at VMPL0.
+[    1.234567] SEV: SNP guest platform device initialized.
+
+#cat /proc/cmdline
+BOOT_IMAGE=(hd0,gpt2)/vmlinuz-6.14.0-rc7stable_2 root=/dev/mapper/opencloudos-root ro crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M rd.lvm.lv=opencloudos/root
+
+#grep swiotlb /etc/sysconfig/kdump
+KDUMP_COMMANDLINE_REMOVE="hugepages hugepagesz slub_debug quiet log_buf_len swiotlb cma hugetlb_cma ignition.firstboot"
+
+
+Previuos run with OpenCloudoS SNP guest6.14-rc7 
+
+#kexec -p /boot/vmlinuz-6.14.0-rc7stable_2 --initrd /boot/initramfs-6.14.0-rc7stable_2.img  --reuse-cmdline --append "irqpoll nr_cpus=1"
+
+
+uname -a
+dmesg | grep SNP
+cat /proc/cmdline
+grep swiotlb /etc/sysconfig/kdump
+kexec -p /boot/vmlinuz-6.14.0-rc7stable_2 --initrd /boot/initramfs-6.14.0-rc7stable_2.img  --reuse-cmdline --append "earlyprintk efi=debug sevguest.dyndbg swiotlb=force swiotlb=262144 reset_devices systemd.unit=kdump-tools-dump.service nr_cpus=1 irqpoll nousb"
+echo c > /proc/sysrq-trigger
+
+
+[root@volcano99fc-host mohan]# kdumpctl estimate
+grep: warning: stray \ before -
+grep: warning: stray \ before -
+Reserved crashkernel:    512M
+Recommended crashkernel: 512M
+
+Kernel image size:   49M
+Kernel modules size: 9M
+Initramfs size:      33M
+Runtime reservation: 64M
+Large modules:
+    ext4: 1126400
+    kvm: 1363968
+[root@volcano99fc-host mohan]#
+
+
+kdump-config equilvalent on CloudOS is /etc/sysconfig/kdump  config file. [ /etc/kdump.conf ]
+We verified the setting in it & able to produce vmcore on SEV & normal VMS on CloudOS SNP kernel(v6.14-rc6)
+
+ ./makedumpfile -c -d 31
+
+
+/boot/vmlinuz-5.14.0-503.34.1.el9_5.x86_64
+/boot/initramfs-5.14.0-503.34.1.el9_5.x86_64.img
+
+kexec -p /boot/vmlinuz-6.6.70-24.oc9.x86_64 --initrd /boot/initramfs-6.6.70-24.oc9.x86_64kdump.img  --reuse-cmdline --append "earlyprintk nr_cpus=1 irqpoll nousb"
+sleep 1
+echo c > /proc/sysrq-trigger
+
+[root@cloudos92-sev ~]# ls /var/crash
+127.0.0.1-2025-03-26-16:29:16  dmesg.2025-03-24-16:29  dmesg.2025-03-26-16:29
+
+
+[root@cloudos92-sev ~]# ls /var/crash
+127.0.0.1-2025-03-26-16:33:15  dmesg.2025-03-26-16:29
+dmesg.2025-03-24-16:29         dmesg.2025-03-26-16:33
+
+[root@cloudos92-sev ~]# ls /var/crash
+127.0.0.1-2025-03-26-16:37:37  dmesg.2025-03-26-16:29  dmesg.2025-03-26-16:37
+dmesg.2025-03-24-16:29         dmesg.2025-03-26-16:33
+
+[amd@cloudos92-sev ~]$ rpm -qa | grep kexec
+kexec-tools-2.0.26-12.oc9.x86_64
+
+[root@volcano99fc-host mohan]# rpm -qa | grep squash
+squashfs-tools-4.6.1-2.oc9.x86_64
+dracut-squash-059-6.oc9.x86_64
+
+
+modprobe loop overlay squashfs

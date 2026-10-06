@@ -1,0 +1,66 @@
+
+1) find MAC of the VM
+virsh domiflist teuler2203-5
+ Interface   Type     Source   Model   MAC
+----------------------------------------------------------
+ vnet35      bridge   br0      e1000   52:54:00:08:82:74
+
+2) Run "nmap" on the subnet of Host & it will get all IPs with MAC
+
+  nmap -sP 10.86.27.0/24  > /tmp/ips
+
+  [ take a copy of /tmp/ips & in /tmp/ips, remove 1st(start of nmap) & last line (end of nmap) then run following awk ]
+  awk 'NR%3{printf "%s ",$0;next;}1' /tmp/ips   [ joins 3 line into single line ] 
+
+3) Search MAC found in step 1 in "nmap" output
+
+
+ /tmp/pp5 | awk '{print $6;}' | cut -d '(' -f2 | cut -d ')' -f1
+
+
+Automation:
+
+#!/usr/bin/bash
+
+##[ start all required VMs first ]
+  ## find currently used IPs on the subnet & its MACs
+  nmap -sP 10.86.22.0/24  > /tmp/ips
+  grep -v Starting  /tmp/ips | grep -v "Nmap done" | awk 'NR%3{printf "%s ",$0;next;}1' > /tmp/ips2
+
+## get MACs of running VMs
+ echo "Running VMs.."
+ virsh list  | grep runn | awk '{print $2}'
+ virsh list  | grep runn | awk '{print "virsh domiflist " $2}' > /tmp/vm_list
+ echo "IPs.."
+ chmod 755 /tmp/vm_list
+
+## Find entry for VM's MAC in nmap output, which contains IP address associated with that MAC
+ /tmp/vm_list | grep vnet | awk '{print $5}' | awk '{print "grep -i ",$1, "/tmp/ips2";}' > /tmp/macs
+ chmod 755 /tmp/macs
+ /tmp/macs | awk '{print $6}'
+
+
+
+Loop
+####
+subnet=15;
+subnet_range=18
+
+while [ $subnet -le $subnet_range ];
+do
+        ip="10.86"
+        ip=$ip"."$subnet"."0
+        nmap_cmd="nmap -sP $ip/24"
+        echo "subnet: $subnet, ip : $ip, cmd: $nmap_cmd"
+        $nmap_cmd >> /tmp/kk1
+        subnet=`expr $subnet + 1 `
+done
+
+
+
+10.86.27.199
+
+Host is up (0.00020s latency). MAC Address: 74:5D:22:D7:9F:EE (Unknown) Nmap scan report for anolis231-uefi-1.amd.com (10.86.17.212)
+
+
+10.86.26.254

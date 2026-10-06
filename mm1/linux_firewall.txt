@@ -1,0 +1,10 @@
+RHEL:
+
+sudo systemctl status firewalld; sudo systemctl stop firewalld;  sudo systemctl start firewalld
+
+
+Ubuntu:
+sudo ufw status;   sudo ufw disable; sudo ufw enable
+
+
+TSA, turin readiness, hugetlbfs

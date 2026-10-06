@@ -1,0 +1,64 @@
+
+Changinf root passwd:
+
+ $ sudo -s OR sudo -i  [ using default passwd it will enter into root user]
+
+ # sudo passwd root  [ now set new passwd ]
+
+Changing hostname
+
+Enabling root ssh login:
+
+/etc/ssh/sshd_config:
+
+change "#PermitRootLogin without-password " to "PermitRootLogin yes"
+
+ restart ssh : sudo service ssh restart
+
+host name: volcano9b5e-oshost
+
+## firewall
+sudo ufw status
+sudo systemctl stop ufw
+
+Host: volcano9b5e-oshost / 10.86.23.85  [ amd / amd1234! ]
+
+BMC IP: 10.86.20.147  [ root / 0penBmc ]
+
+
+bmc_type = "AMI"
+bmc_ip = "10.86.20.147"
+bmc_username = "root"
+bmc_password = "0penBmc"
+bmc_usernameipmi = "root"
+bmc_passwordipmi = "0penBmc"
+host_ip = "10.86.23.85"
+host_user = "root"
+host_password = "amd123"
+
+
+
+
+https://jenkins.amd.com/Baremetal_Sanity/SUT_details/
+
+Force uninstall a pkg in inconsistant state:
+
+sudo dpkg --remove --force-remove-reinstreq <pkg name>
+
+
+Adding the fingerprint
+I’ll demonstrate adding the fingerprint from a remote server to a local machine. Let’s say the remote server is at 192.168.1.162. To add that fingerprint, the command would be:
+
+ssh-keyscan -H 192.168.1.162 >> ~/.ssh/known_hosts
+
+timedatectl  [ setting timezone & time ]
+
+
+CloudOS Regression testing:
+
+On Turin system:  
+ - Host regression with all backported patches run done. No issues found
+ - Host + VMs regression in progress
+On Genoa system:  
+ - Host regression with all backported patches run done. No issues found
+ - Host + VMs regression in progress

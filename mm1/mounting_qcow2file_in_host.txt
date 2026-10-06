@@ -1,0 +1,50 @@
+
+
+sudo modprobe nbd
+sudo qemu-nbd -c /dev/nbd0 --read-only /path/to/image.qcow2
+
+sudo mount /dev/nbd0 /mnt
+
+[ use sudo fdisk -l /dev/nbd0, to check whether your disk size reflects ]
+
+[root@volcano9f6e-hostos src_repos]# fdisk -l /dev/nbd0
+Disk /dev/nbd0: 64 GiB, 68719476736 bytes, 134217728 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes  
+
+
+When finished, unmount and disconnect
+
+sudo umount /mnt
+sudo qemu-nbd --disconnect /dev/nbd0
+sudo rmmod nbd
+
+
+1) 9f6e:
+
+[root@volcano9f6e-hostos src_repos]# pwd
+/vms/src_repos
+[root@volcano9f6e-hostos src_repos]# ls
+anolis  cloudos  euler  libvirt  Linux_Backport  Linux_Backport_Testing  linux_stable  linux_torvalds  lost+found  ovmf  qemu
+[root@volcano9f6e-hostos src_repos]# df -h ./
+Filesystem                                 Size  Used Avail Use% Mounted on
+/dev/mapper/test_results-test_results_lv2  2.0T  1.1T  821G  58% /vms
+[root@volcano9f6e-hostos src_repos]#
+
+
+On the following Hosts: 9b0c, 9dee, 9f6e, 9f8e, 9b5e,  the source repo for distros, upstream kernel, qemu, libvirt, backport, ovmf are available under /vms/src_repos:
+
+/vms/src_repos# ls
+anolis   euler    Linux_Backport          linux_stable    lost+found  qemu      velinux
+cloudos  libvirt  Linux_Backport_Testing  linux_torvalds  ovmf
+
+[ Note: test/vm LV should be mounted at /vms. Example:
+
+   df -h ./
+   Filesystem                                 Size  Used Avail Use% Mounted on
+   /dev/mapper/test_results-test_results_lv2  1.8T  907G  767G  55% /vms
+]
+
+
+So, each time, you need not git clone the repo. Just copy the respective dir to your home dir & git pull to get the latest changes. This will avoid multiple git clones by multiple developer and saves network bandwidth.

@@ -1,0 +1,20 @@
+1. lscpu -e=CPU,CORE,SOCKET,NODE,CACHE
+
+
+2.
+for cpu in /sys/devices/system/cpu/cpu[0-9]*; do
+
+echo -n "$(basename $cpu): "
+
+cat $cpu/cache/index3/shared_cpu_list
+
+done | sort -u
+
+``
+
+3. sudo dnf install hwloc or sudo apt install hwloc
+   lstopo-no-graphics
+
+4. cpuid | grep -i -E "topology|cache|core"
+
+

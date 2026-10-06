@@ -1,0 +1,277 @@
+
+Link: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/5/html/virtualization/chap-virtualization-pci_passthrough#sect-Virtualization-PCI_passthrough-AI_device_to_a_host
+
+
+preparing host:
+1) Enable IOMMU at BIOS 
+
+  BIOS setup => Advanced Tab → AMD CBS →  NBIO common → IOMMU -> Enabled
+
+2) linux command line include the following & run grub2-mkconfig : [ in /etc/default/grub file ]
+  
+        mem_encrypt=on iommu=on kvm_amd.avic=1     
+
+3) Enabled PCI passthrough (for a nvme disk ) to a vm & created FS & done dd command runs
+
+
+
+
+
+
+
+
+
+[root@volcano9f6e-hostos default]# grep -i samsung /tmp/ll1
+02:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
+21:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+22:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+c1:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+c2:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+[root@volcano9f6e-hostos default]#
+
+
+euler-clone-2
+
+
+<disk type='block' device='disk'>
+      <driver name='qemu' type='raw' cache='none'/>
+      <source dev='/dev/nvme0n1'/>
+      <target dev='vda' bus='virtio'/>
+</disk>
+
+
+# virsh attach-disk euler-clone-2 /dev/nvme0n1 vda
+
+virsh nodedev-dumpxml pci_8086_3a6c
+
+
+[root@volcano9f6e-hostos ~]# grep -i SAMSUNG /home/amd/ll1
+02:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
+21:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+22:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+c1:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+c2:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM174X
+[root@volcano9f6e-hostos ~]#
+
+
+BOOT_IMAGE=(hd0,gpt2)/vmlinuz-6.6.25_snp_bp2 root=/dev/mapper/ao_anolis-root ro resume=/dev/mapper/ao_anolis-swap rd.lvm.lv=ao_anolis/root rd.lvm.lv=ao_anolis/swap rhgb quiet mem_encrypt=on iommu=on kvm_amd.sev=1
+
+mem_encrypt=on iommu=on kvm_amd.avic=1
+
+
+virsh nodedev-list | grep pci 
+
+[root@volcano9f6e-hostos amd]# dmesg | grep -i nvme
+[    7.819914] nvme nvme0: pci function 0000:02:00.0
+[    7.840716] nvme nvme0: Shutdown timeout set to 10 seconds
+[    7.848462] nvme nvme1: pci function 0000:21:00.0
+[    7.849335] nvme nvme2: pci function 0000:22:00.0
+[    7.849654] nvme nvme3: pci function 0000:c1:00.0
+[    7.849839] nvme nvme4: pci function 0000:c2:00.0
+[    7.883765] nvme nvme0: 129/0/0 default/read/poll queues
+[    7.895432] nvme nvme2: Shutdown timeout set to 10 seconds
+[    7.895608] nvme nvme1: Shutdown timeout set to 10 seconds
+[    7.896217] nvme nvme3: Shutdown timeout set to 10 seconds
+[    7.897449] nvme nvme4: Shutdown timeout set to 10 seconds
+[    7.965370] nvme nvme4: 127/0/0 default/read/poll queues
+[    7.981353] nvme nvme3: 127/0/0 default/read/poll queues
+[    8.006132] nvme nvme2: 127/0/0 default/read/poll queues
+[    8.017058] nvme nvme1: 127/0/0 default/read/poll queues
+[    8.058600]  nvme3n1: p1 p2 p3
+[    8.069384]  nvme2n1: p1 p2 p3
+[   14.865034] EXT4-fs (nvme2n1p2): mounted filesystem with ordered data mode. Opts: (null)
+[   24.087780] block nvme2n1: No UUID available providing old NGUID
+[   24.102110] block nvme2n1: No UUID available providing old NGUID
+[root@volcano9f6e-hostos amd]#
+[root@volcano9f6e-hostos amd]# dmesg | grep -i nvme0
+[    7.819914] nvme nvme0: pci function 0000:02:00.0
+[    7.840716] nvme nvme0: Shutdown timeout set to 10 seconds
+[    7.883765] nvme nvme0: 129/0/0 default/read/poll queues
+
+
+
+
+virsh nodedev-dumpxml pci_0000_02_00_0   [ 7.819914] nvme nvme0: pci function 0000:02:00.0 ]
+[root@volcano9f6e-hostos amd]# virsh nodedev-dumpxml pci_0000_02_00_0
+<device>
+  <name>pci_0000_02_00_0</name>
+  <path>/sys/devices/pci0000:00/0000:00:05.1/0000:02:00.0</path>
+  <parent>pci_0000_00_05_1</parent>
+  <driver>
+    <name>nvme</name>
+  </driver>
+  <capability type='pci'>
+    <class>0x010802</class>
+    <domain>0</domain>
+    <bus>2</bus>
+    <slot>0</slot>
+    <function>0</function>
+    <product id='0xa80a'>NVMe SSD Controller PM9A1/PM9A3/980PRO</product>
+    <vendor id='0x144d'>Samsung Electronics Co Ltd</vendor>
+    <iommuGroup number='34'>
+      <address domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </iommuGroup>
+    <numa node='0'/>
+    <pci-express>
+      <link validity='cap' port='0' speed='16' width='4'/>
+      <link validity='sta' speed='8' width='4'/>
+    </pci-express>
+  </capability>
+</device>
+
+
+
+0000:e2:00.0
+
+[root@volcano9f6e-hostos amd]#
+
+virsh nodedev-dettach pci_0000_02_00_0   [ reattaching: virsh nodedev-reattach pci_0000_02_00_0 ]
+
+
+<hostdev mode='subsystem' type='pci' managed='yes'>
+  <source>
+      <address domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+  </source>
+</hostdev>
+
+
+Host:
+[root@volcano9f6e-hostos tracing]# uname -a
+Linux volcano9f6e-hostos 5.10.0-x2apic_bp+ #11 SMP Tue Mar 11 12:46:25 IST 2025 x86_64 x86_64 x86_64 GNU/Linux
+[root@volcano9f6e-hostos tracing]# dmesg | grep -i IOMMU  | head -5
+[    0.000000] Command line: BOOT_IMAGE=/vmlinuz-5.10.0-x2apic_bp+ root=/dev/mapper/openeuler-root ro resume=/dev/mapper/openeuler-swap rd.lvm.lv=openeuler/root rd.lvm.lv=openeuler/swap cgroup_disable=files apparmor=0 crashkernel=512M mem_encrypt=on iommu=on kvm_amd.avic=1
+[    0.031553] Kernel command line: BOOT_IMAGE=/vmlinuz-5.10.0-x2apic_bp+ root=/dev/mapper/openeuler-root ro resume=/dev/mapper/openeuler-swap rd.lvm.lv=openeuler/root rd.lvm.lv=openeuler/swap cgroup_disable=files apparmor=0 crashkernel=512M mem_encrypt=on iommu=on kvm_amd.avic=1
+[    2.406379] iommu: Memory encryption detected - Disabling default IOMMU Passthrough
+[    2.406379] iommu: Default domain type: Translated
+[    3.357190] pci 0000:60:00.2: AMD-Vi: IOMMU performance counters supported
+[root@volcano9f6e-hostos tracing]# head -20 trace
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 3852/3852   #P:512
+#
+#                                _-----=> irqs-off
+#                               / _----=> need-resched
+#                              | / _---=> hardirq/softirq
+#                              || / _--=> preempt-depth
+#                              ||| /     delay
+#           TASK-PID     CPU#  ||||   TIMESTAMP  FUNCTION
+#              | |         |   ||||      |         |
+   irq/29-AMD-Vi-3359    [129] ....  2443.886172: kvm_avic_ga_log: vmid=15, vcpuid=14  ===>  IOMMU AVIC works
+   irq/29-AMD-Vi-3359    [129] ....  2443.886302: kvm_avic_ga_log: vmid=15, vcpuid=14
+   irq/29-AMD-Vi-3359    [129] ....  2443.984582: kvm_avic_ga_log: vmid=15, vcpuid=10
+   irq/29-AMD-Vi-3359    [129] ....  2443.984739: kvm_avic_ga_log: vmid=15, vcpuid=10
+   irq/29-AMD-Vi-3359    [129] ....  2443.992695: kvm_avic_ga_log: vmid=15, vcpuid=10
+   irq/29-AMD-Vi-3359    [129] ....  2443.992814: kvm_avic_ga_log: vmid=15, vcpuid=10
+   irq/29-AMD-Vi-3359    [129] ....  2444.743466: kvm_avic_ga_log: vmid=15, vcpuid=6
+   irq/29-AMD-Vi-3359    [129] ....  2445.685523: kvm_avic_ga_log: vmid=15, vcpuid=4
+   irq/29-AMD-Vi-3359    [129] ....  2445.961251: kvm_avic_ga_log: vmid=15, vcpuid=10
+[root@volcano9f6e-hostos tracing]#
+
+
+Note: 
+  1) "kvm_avic_ga_log" is a KVM trace event used for logging information related to AMD's IOMMU AVIC, at host side.
+  2) Without the  "x2avic" patches, "kvm_avic_ga_log" event is not logged in the tracing.
+
+Guest:
+
+[root@localhost amd]# uname -a
+Linux localhost.localdomain 5.10.0-x2apic_bp+ #11 SMP Tue Mar 11 12:46:25 IST 2025 x86_64 x86_64 x86_64 GNU/Linux
+[root@localhost amd]# lsblk
+NAME               MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda                  8:0    0    64G  0 disk
+├─sda1               8:1    0     1G  0 part /boot
+└─sda2               8:2    0    63G  0 part
+  ├─openeuler-root 253:0    0    38G  0 lvm  /
+  ├─openeuler-swap 253:1    0   6.4G  0 lvm  [SWAP]
+  └─openeuler-home 253:2    0  18.6G  0 lvm  /home
+sr0                 11:0    1  1024M  0 rom
+nvme0n1            259:0    0 476.9G  0 disk /tests   ==================>  "nvme" disk attached to the guest as PCI passthrough 
+[root@localhost amd]#
+
+  
+
+Steps [ on 9f6e system ]
+############################
+1) Identify free disk on Host
+   lsblk
+
+2) Find the device PCI details:  [ example /dev/nvme0 disk ]
+    [root@volcano9f6e-hostos ~]# dmesg| grep nvme0
+    [    8.076880] nvme nvme0: pci function 0000:02:00.0
+    [    8.103675] nvme nvme0: Shutdown timeout set to 10 seconds
+    [    8.174032] nvme nvme0: 129/0/0 default/read/poll queues
+
+3) get PCI device entry:
+   virsh nodedev-list | grep pci 
+
+   ....
+   pci_0000_02_00_0    ====> [ nvme nvme0: pci function 0000:02:00.0 ]
+
+4) Detach the device from host:
+
+  virsh nodedev-dettach pci_0000_02_00_0   [ reattaching: virsh nodedev-reattach pci_0000_02_00_0 ]
+
+ 
+5) Add the following entry into VM xml config: [add a device entry in the <devices> section to attach the PCI device to the guest ]
+
+  <hostdev mode='subsystem' type='pci' managed='yes'>
+    <source>
+      <address domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </source>
+  </hostdev>
+
+6) restart the guest
+
+7) check trace:
+ 
+ echo 1 > tracing_on
+ tail -f trace
+ echo 0 > tracing_on
+
+
+
+[    1.831785] nvme nvme3: pci function 0003:81:00.0
+
+pci_0003_81_00_0
+
+<hostdev mode='subsystem' type='pci' managed='yes'>
+    <source>
+      <address domain='0x0003' bus='0x81' slot='0x00' function='0x0'/>
+    </source>
+</hostdev>
+
+99fc:
+1) nvme0 - free disk
+2) [root@volcano99fc-os ~]# dmesg | grep nvme0
+[    8.823042] nvme nvme0: pci function 0000:02:00.0
+
+3)virsh nodedev-list | grep pci_0000_02_00_0
+   pci_0000_02_00_0 
+
+4)  virsh nodedev-dettach  pci_0000_02_00_0 
+
+5) Add xml entry:
+  <hostdev mode='subsystem' type='pci' managed='yes'>
+    <source>
+      <address domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </source>
+  </hostdev>
+
+
+
+[root@volcano99fc-os ~]# grubby --default-kernel
+/boot/vmlinuz-6.6.0_snp_phase2_complete_+
+[root@volcano99fc-os ~]# grubby --set-default=/boot/vmlinuz-6.6.0_x2avic_full_+
+[root@volcano99fc-os ~]# grubby --default-kernel
+/boot/vmlinuz-6.6.0_x2avic_full_+
+[root@volcano99fc-os ~]#
+
+
+ 4.533503] nvme nvme4: pci function 0000:e2:00.0
+
+
+ELVES Q3:
+
+DEAE-4146, DEAE-4147
+
+virsh nodedev-reattach pci_0000_e2_00_0

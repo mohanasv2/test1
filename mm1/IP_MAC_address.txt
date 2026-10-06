@@ -1,0 +1,104 @@
+Host name :volcano9f8e-oshost
+Host IP : 10.86.20.188
+Host MAC : 74:5d:22:d7:a3:e2
+
+#######################################################
+
+[amd@volcano9f8e-oshost ~]$ cat /sys/class/net/enp82s0/address
+74:5d:22:d7:a3:e2
+
+[amd@volcano9f8e-oshost ~]$ ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: enp82s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 74:5d:22:d7:a3:e2 brd ff:ff:ff:ff:ff:ff
+    inet 10.86.20.188/21 brd 10.86.23.255 scope global dynamic noprefixroute enp82s0
+       valid_lft 171577sec preferred_lft 171577sec
+    inet6 fe80::765d:22ff:fed7:a3e2/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+[amd@volcano9f8e-oshost ~]$ uname -a
+Linux volcano9f8e-oshost.amd.com 6.4.0-10.1.0.20.oe2309.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Sep 25 19:01:14 CST 2023 x86_64 x86_64 x86_64 GNU/Linux
+
+#####################################################
+
+
+Setting static IP in Ubuntu:
+
+#cd /etc/netplan
+# cp 00-installer-config.yaml  org_00-installer-config.yaml
+# cat 00-installer-config.yaml
+
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    enp1s0:
+      dhcp4: true
+  version: 2
+
+change the content as below:
+
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    enp1s0:
+            addresses:
+                    - 10.138.175.56/22
+  version: 2
+
+After this run netplan apply:
+
+#netplan apply
+
+
+OpenAnolis:
+
+volcano9f6e-os
+
+######################################################
+OpenAnolis Netqork bringup after reboor:
+nmcli connection show
+
+nmcli device status
+
+nmcli connection up id enp3s0
+nmcli device disconnect enp3s0
+
+nmcli connection up id enp82s0
+
+######################################################
+
+OpenCloudOS
+######################################################
+[Yesterday 11:49 AM] S, Adarsh
+You can try these steps:
+Create network bridge with slave interface enp68s0f1 in Redhat
+ip a   (check ip-ethernet name)
+
+nmcli con (alternative to ip a)
+
+nmcli conn add type bridge con-name br0 ifname br0
+
+nmcli conn add type ethernet slave-type bridge con-name bridge-br0 ifname enp68s0f1 master br0
+
+nmcli conn up br0
+
+nmcli conn down enp68s0f1
+brctl show br0 ( for bridge details) 
+
+
+###########################
+nmcli c add type bridge con-name br0 ifname br0
+
+nmcli c add type ethernet slave-type bridge con-name bridge-br0 ifname enp97s0 master br0
+
+nmcli conn up br0
+
+nmcli conn down enp97s0
+
+##########################
+
+######################################################

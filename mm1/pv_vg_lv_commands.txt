@@ -1,0 +1,166 @@
+PV:
+
+sudo pvcreate /dev/nvme4n1
+sudo pvdisplay
+
+
+VG:
+
+sudo vgcreate test_results /dev/nvme4n1
+sudo vgdisplay
+
+LV:
+
+sudo lvcreate -n test_results_lv1 -L 1024g test_results
+sudo lvcreate -n test_results_lv2 -L 2048g test_results
+sudo lvcreate -n test_results_lv3 -L 500g test_results
+
+FS:
+
+sudo mkfs -t ext4 /dev/test_results/test_results_lv1
+
+
+amd@volcano9f6e-os:/vms/iso$ sudo mount /dev/test_results/src_lv /src
+amd@volcano9f6e-os:/vms/iso$ sudo mount /dev/test_results/test_results_lv1 /tests
+
+
+sudo lvcreate -n src_lv1 -L 1024g test_results
+
+lvresize -r 
+lvresize  --resizefs -L 1024M /dev/vgubuntu/root
+
+Removing partitions & reclaiming disk:
+
+sudo wipefs /dev/sda [ /dev/nvme01 ]
+
+sudo wipefs --all --force /dev/vdb
+
+If it is with LV, VG & PV, then use the following steps:
+
+1) lvremove <lvpath> [ remove all LVs ]
+2) vgremove <vgname>
+3) pvremove <pv path >
+4) sudo wipefs --all --force /dev/nvme5n1  [ major nvme disk] this will remove all nvme partitions
+
+
+## reducing other LV & increasing / [root] LV size:
+1) First unmount /home
+   lvreduce --resizefs -L -512G /dev/mapper/openeuler-home [reduce by 512GB ]
+
+2) Check lsblk [ see total size of disk & its partitions [LVs ] ]
+3) Extend "root" [ / ] FS LV size 
+    lvextend -r -l +50%FREE /dev/mapper/openeuler-roo
+
+[root@volcano99fc-os tests]# lvdisplay | grep openeuler
+  LV Path                /dev/openeuler/swap
+  VG Name                openeuler
+  LV Path                /dev/openeuler/home
+  VG Name                openeuler
+  LV Path                /dev/openeuler/root
+  VG Name                openeuler
+[root@volcano99fc-os tests]# df -h | grep open
+/dev/mapper/openeuler-root                  69G   48G   18G  74% /
+/dev/mapper/openeuler-home                 3.4T  4.2G  3.2T   1% /home
+[root@volcano99fc-os tests]#
+
+
+  LV Path                /dev/volcano9f8e-oshost-vg/root
+  LV Path                /dev/volcano9f8e-oshost-vg/swap_1
+  LV Path                /dev/volcano9f8e-oshost-vg/home
+
+
+  lvreduce --resizefs -L -20G /dev/volcano9f8e-oshost-vg/home
+
+ lvextend -r -l +100%FREE /dev/volcano9f8e-oshost-vg/root
+
+Resize qemu image:
+##################
+qemu-img resize disk.qcow2 +20G
+
+inside the guest, Expand the Guest Partition & Filesystem:
+
+# Expand partition 1 on device /dev/vda
+sudo growpart /dev/vda 1
+
+# Resize the ext4 filesystem to fill the expanded partition
+sudo resize2fs /dev/vda 1
+
+Reducing FS, LV, PV and disk partition:
+#######################################
+
+1. [root@volcano9b5e-hostos ~]# lvdisplay | grep openeuler
+  LV Path                /dev/openeuler/swap
+  VG Name                openeuler
+  LV Path                /dev/openeuler/home
+  VG Name                openeuler
+  LV Path                /dev/openeuler/root
+  VG Name                openeuler
+  LV Path                /dev/openeuler00/swap
+  VG Name                openeuler00
+  LV Path                /dev/openeuler00/home
+  VG Name                openeuler00
+  LV Path                /dev/openeuler00/root
+  VG Name                openeuler00
+
+[root@volcano9b5e-hostos ~]# lsblk | grep -e nvme2n1 -e openeuler-
+nvme2n1                         259:12   0   3.5T  0 disk
+├─nvme2n1p1                     259:15   0   600M  0 part
+├─nvme2n1p2                     259:16   0     1G  0 part
+└─nvme2n1p3                     259:17   0   3.5T  0 part
+  ├─openeuler-swap              251:12   0     4G  0 lvm
+  ├─openeuler-home              251:13   0   3.4T  0 lvm
+  └─openeuler-root              251:14   0    70G  0 lvm
+
+[root@volcano9b5e-hostos ~]# lvreduce  --resizefs -L 1TB /dev/openeuler/home
+fsck from util-linux 2.32.1
+/dev/mapper/openeuler-home: 913436/229474304 files (0.3% non-contiguous), 51067705/917869568 blocks
+resize2fs 1.45.6 (20-Mar-2020)
+Resizing the filesystem on /dev/mapper/openeuler-home to 268435456 (4k) blocks.
+The filesystem on /dev/mapper/openeuler-home is now 268435456 (4k) blocks long.
+
+  Size of logical volume openeuler/home changed from <3.42 TiB (896357 extents) to 1.00 TiB (262144 extents).
+  Logical volume openeuler/home successfully resized.
+[root@volcano9b5e-hostos ~]#
+[root@volcano9b5e-hostos ~]# lsblk | grep -e nvme2n1 -e openeuler-
+nvme2n1                         259:12   0   3.5T  0 disk
+├─nvme2n1p1                     259:15   0   600M  0 part
+├─nvme2n1p2                     259:16   0     1G  0 part
+└─nvme2n1p3                     259:17   0   3.5T  0 part
+  ├─openeuler-swap              251:12   0     4G  0 lvm
+  ├─openeuler-home              251:13   0     1T  0 lvm
+  └─openeuler-root              251:14   0    70G  0 lvm
+[root@volcano9b5e-hostos ~]#
+
+2. [root@volcano9b5e-hostos ~]# parted /dev/nvme2n1
+GNU Parted 3.2
+Using /dev/nvme2n1
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) p
+Model: NVMe Device (nvme)
+Disk /dev/nvme2n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  630MB   629MB   fat32        EFI System Partition  boot, esp
+ 2      630MB   1704MB  1074MB  ext4
+ 3      1704MB  3841GB  3839GB                                     lvm
+
+(parted) resizepart 3 1.1TB
+Warning: Shrinking a partition can cause data loss, are you sure you want to continue?
+Yes/No? yes
+(parted) p
+Model: NVMe Device (nvme)
+Disk /dev/nvme2n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  630MB   629MB   fat32        EFI System Partition  boot, esp
+ 2      630MB   1704MB  1074MB  ext4
+ 3      1704MB  1100GB  1098GB                                     lvm
+
+(parted) q
+

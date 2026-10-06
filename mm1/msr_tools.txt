@@ -1,0 +1,121 @@
+msr-tools : 
+wget https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/m/msr-tools-1.3-17.el8.x86_64.rpm
+
+
+Getting details of MSRs for cpu id 0:
+
+msr-cpuid  0 > /tmp/cpu0
+
+
+
+C001_0200h PerfEvtSel0
+These MSR addresses are aliases for the base
+set of performance event-select registers
+PerfEvtSel[3:0].
+0000_0000_0000_0000h
+C001_0202h PerfEvtSel1
+C001_0204h PerfEvtSel2
+C001_0206h PerfEvtSel3
+C001_0208h PerfEvtSel4 Extended core performance event-select
+C001_020Ah
+
+
+C001_0200h PerfEvtSel0
+C001_0202h PerfEvtSel1
+C001_0204h PerfEvtSel2
+C001_0206h PerfEvtSel3
+C001_0208h PerfEvtSel4 
+C001_020Ah PerfEvtSel5
+
+C001_0201h PerfCtr0
+C001_0203h PerfCtr1
+C001_0205h PerfCtr2
+C001_0207h PerfCtr3
+C001_0209h PerfCtr4 
+C001_020Bh PerfCtr5
+
+  rdmsr  --all    C001_0200h
+  rdmsr  --all    C001_0202h
+  rdmsr  --all    C001_0204h
+  rdmsr  --all    C001_0206h
+  rdmsr  --all    C001_0208h
+  rdmsr  --all    C001_020Ah
+
+rdmsr -x 0xc0010131
+
+
+
+
+
+CPUID command:
+https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/c/cpuid-20230614-3.el8.x86_64.rpm
+
+for X2AVIC, the leaf is Fn8000_000A_EDX
+
+to get all info from this MSR register:   cpuid -1 -l 0x8000000A
+
+
+###############################
+[root@volcano9f6e-hostos amd]# uname -a
+Linux volcano9f6e-hostos 5.10.0-247.0.0.149.oe2203sp3.x86_64 #1 SMP Wed Jan 22 15:56:41 CST 2025 x86_64 x86_64 x86_64 GNU/Linux
+[root@volcano9f6e-hostos amd]# cpuid -1 -l 0x8000000A | grep -i avic   ===> AMD H/W capability
+      AVIC: AMD virtual interrupt controller  = true
+      X2AVIC: virtualized X2APIC              = true
+
+lscpu | grep -o 'x2avic\|avic'   ==> Linux OS capability, whether it supports x2AVIC H/W feature
+avic
+
+euler guest [ 192.168.122.59/24]:
+[root@localhost amd]# cpuid -1 -l 0x8000000A | grep -i avic
+      AVIC: AMD virtual interrupt controller  = false
+      X2AVIC: virtualized X2APIC              = false
+[root@localhost amd]#
+
+########################
+
+[root@volcano9dee-host amd]# uname -a
+Linux volcano9dee-host 6.6.0-28.0.0.34.oe2403.x86_64 #1 SMP Mon May 27 22:22:46 CST 2024 x86_64 x86_64 x86_64 GNU/Linux
+[root@volcano9dee-host amd]#
+[root@volcano9dee-host amd]#  cpuid -1 -l 0x8000000A | grep -i avic
+      AVIC: AMD virtual interrupt controller  = true
+      X2AVIC: virtualized X2APIC              = true
+[root@volcano9dee-host amd]# lscpu | grep -o 'x2avic\|avic'
+avic
+x2avic
+
+###############################
+
+SEV/SNP MSR register:
+
+leaf : 8000_001F
+
+Host:
+#####
+[root@volcano9f8e-os scripts]#  cpuid -1 -l 0x8000001F | grep SNP
+      SEV-SNP: SEV secure nested paging        = true
+[root@volcano9f8e-os scripts]#
+
+
+SEV Guest:
+########
+[root@anolis231-sev-1 amd]# uname -a
+Linux anolis231-sev-1.amd.com 6.6.25_all_snp+ #1 SMP PREEMPT_DYNAMIC Mon Sep 23 15:52:44 IST 2024 x86_64 x86_64 x86_64 GNU/Linux
+[root@anolis231-sev-1 amd]# cpuid -1 -l 0x8000001F | grep SEV
+      SEV: secure encrypted virtualize support = true
+      SEV-ES: SEV encrypted state support      = false
+      SEV-SNP: SEV secure nested paging        = false
+      SEV guest exec only from 64-bit host     = false
+      full debug state swap for SEV-ES guests  = false
+      VTE: SEV virtual transparent encryption  = false
+      IBS virtual support for SEV-ES guests    = false
+      number of SEV-enabled guests supported   = 0x0 (0)
+      minimum SEV guest ASID                   = 0x0 (0)
+
+[root@anolis231-sev-1 amd]# cpuid -1 -l 0x8000001F | grep SNP
+      SEV-SNP: SEV secure nested paging        = false
+
+
+SNP guest:
+##########
+#cpuid -1 -l 0x8000001F | grep SNP
+      SEV-SNP: SEV secure nested paging        = true

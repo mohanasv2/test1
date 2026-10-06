@@ -1,0 +1,474 @@
+libvirtd debug log:
+[ for sev-snp ]
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareInterfaceParse:334 : firmware description path '/usr/share/qemu/firmware/org_60-edk2-ovmf-x64-amdsev.json' supported interfaces:  uefi
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/30-edk2-ovmf-x64-sb-enrolled.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/40-edk2-ovmf-x64-sb.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/50-edk2-aarch64.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/50-edk2-loongarch64.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1368 : Domain requires SEV-SNP firmware '/usr/share/qemu/firmware/50-edk2-ovmf-x64-nosb.json' doesn't support it
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/51-edk2-aarch64-verbose.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/51-edk2-loongarch64-verbose.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/60-edk2-ovmf-x64-amdsev.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/60-edk2-ovmf-x64-inteltdx.json'
+2024-11-21 05:48:24.914+0000: 1708662: debug : qemuFirmwareMatchDomain:1176 : No matching path in '/usr/share/qemu/firmware/org_60-edk2-ovmf-x64-amdsev.json'
+2024-11-21 05:48:24.914+0000: 1708662: error : qemuFirmwareFillDomain:1860 : operation failed: Unable to find 'efi' firmware that is compatible with the current configuration
+2024-11-21 05:48:24.914+0000: 1708662: info : virObjectUnref:378 : OBJECT_UNREF: obj=0x7f0634047f50
+2024-11-21 05:48:24.914+0000: 1708662: info : virObjectUnref:378 : OBJECT_UNREF: obj=0x7f0634125190
+2024-11-21 05:48:24.914+0000: 1708662: info : vir_object_finalize:319 : OBJECT_DISPOSE: obj=0x7f06800673b0
+2024-11-21 05:48:24.914+0000: 1708662: info : virObjectUnref:378 : OBJECT_UNREF: obj=0x7f06800673b0
+2024-11-21 05:48:24.914+0000: 1708662: info : vir_object_finalize:319 : OBJECT_DISPOSE: obj=0x7f06803fb940
+
+[for sev ]
+2024-11-21 06:32:04.950+0000: 1741054: debug : qemuFirmwareMatchDomain:1382 : Firmware '/usr/share/qemu/firmware/50-edk2-ovmf-x64-nosb.json' matches domain requirements
+2024-11-21 06:32:04.950+0000: 1741054: debug : qemuFirmwareFillDomainModern:1729 : Found matching firmware (description path '/usr/share/qemu/firmware/org_60-edk2-ovmf-x64-amdsev.json')
+2024-11-21 06:32:04.950+0000: 1741054: debug : qemuFirmwareEnableFeaturesModern:1430 : decided on firmware '/usr/share/edk2/ovmf/OVMF_CODE.fd' template '/usr/share/edk2/ovmf/OVMF_VARS.fd'
+2024-11-21 06:32:04.950+0000: 1741054: info : virObjectRef:400 : OBJECT_REF: obj=0x7f4fb00485a0
+2024-11-21 06:32:04.950+0000: 1741054: info : virObjectUnref:378 : OBJECT_UNREF: obj=0x7f4fb00485a0
+2024-11-21 06:32:04.950+0000: 1741054: info : virObjectUnref:378 : OBJECT_UNREF: obj=0x7f4fb00485a0
+
+
+12925 2024-11-21 06:32:05.027+0000: 1741054: info : virDomainObjListLoadAllConfigs:596 : Loading       config file 'vm1-snp1.xml'
+
+
+ "executable": {
+            "filename": "/usr/share/edk2/ovmf/OVMF_CODE.fd",
+            "format": "raw"
+        },
+        "nvram-template": {
+            "filename": "/usr/share/edk2/ovmf/OVMF_VARS.fd",
+            "format": "raw"
+        }
+
+
+   <loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>
+    <nvram template='/usr/share/edk2/ovmf/OVMF_VARS.fd'>/usr/share/edk2/ovmf/OVMF_VARS.fd</nvram
+
+   <loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF.amdsev.fd</loader>
+   
+
+
+
+/usr/share/edk2/ovmf/OVMF.amdsev.fd
+
+"amd-sev-snp",
+
+2024-11-21 10:06:42.318+0000: 11545: error : qemuMonitorIORead:397 : Unable to read from monitor: Connection reset by peer
+
+
+libvirtd log for snp guest:
+
+2024-11-21 10:06:42.001+0000: 11218: debug : virCommandRunAsync:2653 : About to run LC_ALL=C PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin USER=root HOME=/var/lib/libvirt/qemu/domain-1-vm1-snp1 XDG_DATA_HOME=/var/lib/libvirt/qemu/domain-1-vm1-snp1/.local/share XDG_CACHE_HOME=/var/lib/libvirt/qemu/domain-1-vm1-snp1/.cache XDG_CONFIG_HOME=/var/lib/libvirt/qemu/domain-1-vm1-snp1/.config
+
+ /usr/local/bin/qemu-system-x86_64 -name guest=vm1-snp1,debug-threads=on -S -object '{"qom-type":"secret","id":"masterKey0","format":"raw","file":"/var/lib/libvirt/qemu/domain-1-vm1-snp1/master-key.aes"}' -blockdev '{"driver":"file","filename":"/usr/share/edk2/ovmf/OVMF_CODE.fd","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}' -blockdev '{"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}' -blockdev '{"driver":"file","filename":"/usr/share/edk2/ovmf/OVMF_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}' -blockdev '{"node-name":"libvirt-pflash1-format","read-only":false,"driver":"raw","file":"libvirt-pflash1-storage"}' -machine pc-q35-9.1,usb=off,dump-guest-core=off,memory-backend=pc.ram,confidential-guest-support=lsec0,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,hpet=off,acpi=on -accel kvm -cpu host,migratable=on -m size=16777216k -object '{"qom-type":"memory-backend-ram","id":"pc.ram","size":17179869184}' -overcommit mem-lock=on -smp 8,sockets=8,cores=1,threads=1 -uuid 94fc88fc-7a9e-4b0a-91a9-be90ad53a6a4 -no-user-config -nodefaults -chardev socket,id=charmonitor,fd=31,server=on,wait=off -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-shutdown -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -boot menu=on,strict=on -device '{"driver":"pcie-root-port","port":16,"chassis":1,"id":"pci.1","bus":"pcie.0","multifunction":true,"addr":"0x2"}' -device '{"driver":"pcie-pci-bridge","id":"pci.2","bus":"pci.1","addr":"0x0"}' -device '{"driver":"pcie-root-port","port":17,"chassis":3,"id":"pci.3","bus":"pcie.0","addr":"0x2.0x1"}' -device '{"driver":"pcie-root-port","port":18,"chassis":4,"id":"pci.4","bus":"pcie.0","addr":"0x2.0x2"}' -device '{"driver":"ich9-usb-ehci1","id":"usb","bus":"pcie.0","addr":"0x1d.0x7"}' -device '{"driver":"ich9-usb-uhci1","masterbus":"usb.0","firstport":0,"bus":"pcie.0","multifunction":true,"addr":"0x1d"}' -device '{"driver":"ich9-usb-uhci2","masterbus":"usb.0","firstport":2,"bus":"pcie.0","addr":"0x1d.0x1"}' -device '{"driver":"ich9-usb-uhci3","masterbus":"usb.0","firstport":4,"bus":"pcie.0","addr":"0x1d.0x2"}' -blockdev
+
+
+anolis231-sev-1
+
+struct KVMState
+
+[root@volcano9f8e-os amd]# nm /lib/modules/6.6.25_full_sev_snp_+/kernel/arch/x86/kvm/kvm.ko | grep kvm_vm_ioctl
+000000000000ea90 t kvm_vm_ioctl
+0000000000033610 T kvm_vm_ioctl_check_extension
+0000000000004270 t kvm_vm_ioctl_check_extension_generic
+
+
+2024-11-22 06:05:25.284+0000: 397836: error : qemuProcessReportLogError:1926 : internal error: QEMU unexpectedly closed the monitor (vm='vm1-snp1'): 2024-11-22T06:05:25.267923Z qemu-system-x86_64: -accel kvm: sev_common_kvm_init: failed to initialize ret=-22 fw_error=0 ''
+2024-11-22T06:05:25.282646Z qemu-system-x86_64: -accel kvm: failed to initialize kvm: Operation not permitted
+2024-11-22 06:05:25.284+0000: 397836: debug : qemuMonitorIO:516 : Error on monitor internal error: QEMU unexpectedly closed the monitor (vm='vm1-snp1'): 2024-11-22T06:05:25.267923Z qemu-system-x86_64: -accel kvm: sev_common_kvm_init: failed to initialize ret=-22 fw_error=0 ''
+
+###################################################################
+
+qemu build:
+
+../configure --target-list=x86_64-softmmu --disable-werror --enable-debug
+
+Qemu call: r = kvm_vm_ioctl(kvm_state, KVM_MEMORY_ENCRYPT_OP, &input); [ target/i386/sev.c ]
+
+[root@volcano9f8e-os amd]# nm /lib/modules/6.6.25_full_sev_snp_+/kernel/arch/x86/kvm/kvm.ko | grep kvm_vm_ioctl
+000000000000ea90 t kvm_vm_ioctl
+0000000000033610 T kvm_vm_ioctl_check_extension
+0000000000004270 t kvm_vm_ioctl_check_extension_generic
+
+kernel [kvm.ko module] calls:
+
+kvm_vm_ioctl() in ./virt/kvm/kvm_main.c
+
+  ioctl() for  KVM_MEMORY_ENCRYPT_OP is defined in: include/uapi/linux/kvm.h
+
+  implemented in : arch/x86/kvm/x86.c, kvm_arch_vm_ioctl()  [ case KVM_MEMORY_ENCRYPT_OP:  ]
+
+
+  case KVM_MEMORY_ENCRYPT_OP: {
+                r = -ENOTTY;
+                if (!kvm_x86_ops.mem_enc_ioctl)
+                        goto out;
+
+                r = kvm_x86_call(mem_enc_ioctl)(kvm, argp);
+                break;
+        }
+
+
+      .mem_enc_ioctl = sev_mem_enc_ioctl;  sev_mem_enc_ioctl() [ arch/x86/kvm/svm/sev.c ]
+
+ kvm_vm_ioctl() => kvm_arch_vm_ioctl() => sev_mem_enc_ioctl()
+###################################################################
+
+
+kvm_init() => kvm_dev_ioctl() => kvm_dev_ioctl_create_vm() => kvm_create_vm() => kvm_arch_init_vm()
+
+
+
+
+
+qemu code flow:
+
+main() =>qemu_init() ../system/main.c
+       => qemu_default_main() => qemu_main_loop() => main_loop_wait()        
+TYPE_SEV_GUEST
+
+
+qemu_init() => kvm_init() =>kvm_arch_init() => confidential_guest_kvm_init() => sev_kvm_init() =>sev_ioctl() => kvm_vm_ioctl()
+
+kernel:
+
+KVM_MEMORY_ENCRYPT_OP
+
+0 x86.c 6346 case KVM_MEMORY_ENCRYPT_OP: [ kvm_arch_vcpu_ioctl() = > vt_op_tdx_only()]
+1 x86.c 7347 case KVM_MEMORY_ENCRYPT_OP: [ kvm_arch_vm_ioctl() => sev_mem_enc_ioctl() ]
+
+ kvm_arch_vm_ioctl() => sev_mem_enc_ioctl()
+
+ sev_mem_enc_ioctl()
+{
+if (sev_snp_guest(kvm) && sev_cmd.id < KVM_SEV_SNP_LAUNCH_START) {
+                r = -EPERM;
+                goto out;
+
+}
+ // #define EPERM            1      /* Operation not permitted */
+
+static __always_inline bool sev_snp_guest(struct kvm *kvm)
+{
+        struct kvm_sev_info *sev = to_kvm_sev_info(kvm);
+
+        return (sev->vmsa_features & SVM_SEV_FEAT_SNP_ACTIVE) &&
+               !WARN_ON_ONCE(!sev_es_guest(kvm));
+}
+
+kvm_dev_ioctl() =>kvm_dev_ioctl_create_vm() => kvm_create_vm() => kvm_arch_init_vm() sets kvm->arch.vm_type = type;  [ arch/x86/kvm/x86.c ]
+
+qemu-system-x86_64: sev_kvm_init: failed to initialize ret=-22 fw_error=0 ''
+qemu-system-x86_64: failed to initialize kvm: Operation not permitted
+[Thread 0x7fffee0d36c0 (LWP 7882) exited]
+[Thread 0x7fffeebd76c0 (LWP 7854) exited]
+
+kvm_host.h        1950 #define kvm_x86_call(func) static_call(kvm_x86_##func)
+
+pr_info("mm1: %s 1 \n", __func__);
+
+boot time kvm msgs:
+[root@volcano9b0c-os ~]# dmesg | grep mm1
+[    7.831155] mm1: kvm_init 1
+[   19.911368] mm1: kvm_dev_ioctl 1
+[   19.912145] mm1: kvm_dev_ioctl_create_vm 1
+[   19.912712] mm1: kvm_create_vm 1
+[   19.913158] kvm: mm1: (null) 1 vm type = 0
+[   20.041025] mm1: kvm_dev_ioctl 1
+[   20.042045] mm1: kvm_dev_ioctl_create_vm 1
+[   20.042648] mm1: kvm_create_vm 1
+[   20.043115] kvm: mm1: (null) 1 vm type = 0
+[   20.630366] mm1: kvm_dev_ioctl 1
+[   20.631107] mm1: kvm_dev_ioctl_create_vm 1
+[   20.633823] mm1: kvm_create_vm 1
+[   20.634491] kvm: mm1: (null) 1 vm type = 0
+[root@volcano9b0c-os ~]#
+
+#0  kvm_vm_ioctl (s=s@entry=0x555556e39760, type=type@entry=44547) at ../accel/kvm/kvm-all.c:3116
+#1  0x0000555555cf68e1 in kvm_vm_check_extension (extension=9, s=0x555556e39760) at ../accel/kvm/kvm-all.c:1162
+#2  kvm_recommended_vcpus (s=0x555556e39760) at ../accel/kvm/kvm-all.c:2360
+#3  kvm_init (ms=0x555557a64bc0) at ../accel/kvm/kvm-all.c:2531
+
+dmesg:
+[sudo] password for amd:
+[    7.831155] mm1: kvm_init 1
+[   19.911368] mm1: kvm_dev_ioctl 1
+[   19.912145] mm1: kvm_dev_ioctl_create_vm 1
+[   19.912712] mm1: kvm_create_vm 1
+[   19.913158] kvm: mm1: (null) 1 vm type = 0
+[   20.041025] mm1: kvm_dev_ioctl 1
+[   20.042045] mm1: kvm_dev_ioctl_create_vm 1
+[   20.042648] mm1: kvm_create_vm 1
+[   20.043115] kvm: mm1: (null) 1 vm type = 0
+[   20.630366] mm1: kvm_dev_ioctl 1
+[   20.631107] mm1: kvm_dev_ioctl_create_vm 1
+[   20.633823] mm1: kvm_create_vm 1
+[   20.634491] kvm: mm1: (null) 1 vm type = 0
+[  818.081645] mm1: kvm_dev_ioctl 1
+[  818.081679] mm1: kvm_dev_ioctl_create_vm 1
+[  818.081782] mm1: kvm_create_vm 1
+[  818.081794] kvm: mm1: (null) 1 vm type = 0
+
+
+with backported qemu:
+[ 3355.793838] kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 3
+[ 4265.784352] mm1: kvm_dev_ioctl 1
+[ 4265.784815] mm1: kvm_dev_ioctl_create_vm 1
+[ 4265.785185] mm1: kvm_create_vm 1
+[ 4265.785449] kvm: mm1: (null) 1 vm type = 0
+[ 4265.838195] kvm_amd: mm1: sev_mem_enc_ioctl
+[ 4265.838802] kvm_amd: mm1: sev_mem_enc_ioctl 2
+[ 4265.839022] kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 22
+[ 4265.839226] kvm_amd: mm1: sev_mem_enc_ioctl 4
+[ 4265.839424] kvm_amd: mm1: sev_guest_init2 1 kvm->arch.vm_type : 0
+[root@volcano9b0c-os mohan]#
+
+
+with 9.0 qemu:
+Jul 13 08:58:53 volcano9b0c-os kernel: mm1: kvm_dev_ioctl 1
+Jul 13 08:58:53 volcano9b0c-os kernel: mm1: kvm_dev_ioctl_create_vm 1
+Jul 13 08:58:53 volcano9b0c-os kernel: mm1: kvm_create_vm 1
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm: mm1: (null) 1 vm type = 0
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 0
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 2
+Jul 13 08:58:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 3
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 7
+
+
+cmd id = 0
+#0  kvm_vm_ioctl (s=0x55555723a760, type=-1073172806) at ../accel/kvm/kvm-all.c:3090
+#1  0x0000555555d37e7e in sev_ioctl (fd=12, cmd=0, data=0x0, error=0x7fffffffd6f4) at ../target/i386/sev.c:172
+#2  0x0000555555d3a02e in sev_kvm_init (cgs=0x555557c30120, errp=0x7fffffffd768) at ../target/i386/sev.c:999
+#3  0x0000555555d42305 in kvm_arch_init (ms=0x555557e5f7c0, s=0x55555723a760) at ../target/i386/kvm/kvm.c:2541
+#4  0x0000555555f4ed2f in kvm_init (ms=0x555557e5f7c0) at ../accel/kvm/kvm-all.c:2625
+
+cmd id = 2
+#0  kvm_vm_ioctl (s=0x55555723a760, type=-1073172806) at ../accel/kvm/kvm-all.c:3078
+#1  0x0000555555d37e7e in sev_ioctl (fd=12, cmd=2, data=0x7fffffffd6a0, error=0x7fffffffd67c)
+    at ../target/i386/sev.c:172
+#2  0x0000555555d395f5 in sev_launch_start (sev=0x555557c30120) at ../target/i386/sev.c:743
+#3  0x0000555555d3a09b in sev_kvm_init (cgs=0x555557c30120, errp=0x7fffffffd768) at ../target/i386/sev.c:1006
+#4  0x0000555555d42305 in kvm_arch_init (ms=0x555557e5f7c0, s=0x55555723a760) at ../target/i386/kvm/kvm.c:2541
+#5  0x0000555555f4ed2f in kvm_init (ms=0x555557e5f7c0) at ../accel/kvm/kvm-all.c:2625
+
+cmd id: 3
+#0  kvm_vm_ioctl (s=0x55555723a760, type=-2146390341) at ../accel/kvm/kvm-all.c:3090
+#1  0x0000555555d38159 in sev_ram_block_added
+    (n=0x55555709ea00 <sev_ram_notifier>, host=0x7fffec400000, size=131072, max_size=131072)
+    at ../target/i386/sev.c:247
+#2  0x000055555599970d in ram_block_notify_add (host=0x7fffec400000, size=131072, max_size=131072)
+    at ../hw/core/numa.c:870
+#3  0x0000555555ef05ea in ram_block_add (new_block=0x555557e66b20, errp=0x7fffffffd8b8) at ../system/physmem.c:1871
+#4  0x0000555555ef0ce8 in qemu_ram_alloc_internal
+    (size=131072, max_size=131072, resized=0x0, host=0x0, ram_flags=0, mr=0x55555721d2e0, errp=0x7fffffffd950)
+    at ../system/physmem.c:2022
+#5  0x0000555555ef0e11 in qemu_ram_alloc (size=131072, ram_flags=0, mr=0x55555721d2e0, errp=0x7fffffffd950)
+    at ../system/physmem.c:2042
+#6  0x0000555555ee35ec in memory_region_init_ram_flags_nomigrate
+    (mr=0x55555721d2e0, owner=0x0, name=0x5555563cfadf "pc.rom", size=131072, ram_flags=0, errp=0x5555571c9320 <error_fatal>) at ../system/memory.c:1571
+#7  0x0000555555ee3551 in memory_region_init_ram_nomigrate
+
+cmd id: 6
+
+#0  kvm_vm_ioctl (s=0x55555723a760, type=-1073172806) at ../accel/kvm/kvm-all.c:3090
+#1  0x0000555555d37e7e in sev_ioctl (fd=12, cmd=6, data=0x7fffffffdbd0, error=0x7fffffffdbb8)
+    at ../target/i386/sev.c:172
+#2  0x0000555555d39981 in sev_launch_get_measure (notifier=0x55555709ea40 <sev_machine_done_notify>, unused=0x0)
+    at ../target/i386/sev.c:830
+#3  0x00005555561b7703 in notifier_list_notify (list=0x55555719c1b8 <machine_init_done_notifiers>, data=0x0)
+    at ../util/notify.c:39
+
+commands:
+enum sev_cmd_id {
+        /* Guest initialization commands */
+        KVM_SEV_INIT = 0,
+        KVM_SEV_ES_INIT,
+        /* Guest launch commands */
+        KVM_SEV_LAUNCH_START, => 2
+        KVM_SEV_LAUNCH_UPDATE_DATA, => 3
+        KVM_SEV_LAUNCH_UPDATE_VMSA,
+        KVM_SEV_LAUNCH_SECRET,
+        KVM_SEV_LAUNCH_MEASURE, =>6
+        KVM_SEV_LAUNCH_FIN =>7
+  	....
+}
+
+3089        ret = ioctl(s->vmfd, type, arg);
+
+On host "9b0c", the SEV vm starts with "6.6.0_cpuslot_0x49__mohan3_euler_snp" kernel on the host.
+check vncviewer :10 from "9b0c"
+
+bug patch: a70cab4182bb (HEAD -> just_before_init2) target/i386: Implement mc->kvm_type() to get VM type
+
+
+Looks like the problem is NOT with vm type, but with the sev_cmd passed to the ioctl() call from qemu.
+In the case of SEV, the qemu 9.0 issues "sev_cmd.id" from 0 - 7  to initialize the vm, but in the case of
+backported qemu, it directly issues "sev_cmd.id = 22"... looks like the patch "e7a607470028 target/i386: SEV: use KVM_SEV_INIT2 if possible" changed the sev_cmd issue path in our backported qemu. Whereas in qemu 9.0 , the above patch did NOT change the SEV VM initialization path. We need to look from this perspective...
+
+see below the kernel flow for backported qemu & qemu 9.0
+
+with backported qemu:
+[ 3355.793838] kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 3
+[ 4265.784352] mm1: kvm_dev_ioctl 1
+[ 4265.784815] mm1: kvm_dev_ioctl_create_vm 1
+[ 4265.785185] mm1: kvm_create_vm 1
+[ 4265.785449] kvm: mm1: (null) 1 vm type = 0
+[ 4265.838195] kvm_amd: mm1: sev_mem_enc_ioctl
+[ 4265.838802] kvm_amd: mm1: sev_mem_enc_ioctl 2
+[ 4265.839022] kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 22
+[ 4265.839226] kvm_amd: mm1: sev_mem_enc_ioctl 4
+[ 4265.839424] kvm_amd: mm1: sev_guest_init2 1 kvm->arch.vm_type : 0
+[root@volcano9b0c-os mohan]#
+
+
+with 9.0 qemu:
+Jul 13 08:58:53 volcano9b0c-os kernel: mm1: kvm_dev_ioctl 1
+Jul 13 08:58:53 volcano9b0c-os kernel: mm1: kvm_dev_ioctl_create_vm 1
+Jul 13 08:58:53 volcano9b0c-os kernel: mm1: kvm_create_vm 1
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm: mm1: (null) 1 vm type = 0
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 0
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 2
+Jul 13 08:58:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 3
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 08:58:56 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 7
+
+
+
+Here is the BUG in sev_kvm_init() in target/i386/sev.c, of backported qemu:
+
+The "if" condition fails & it enters into the "else" part. It should have entered into the "if" part, which is "SEV_INIT".
+This is the difference between qemu 9.0 & our backported qemu. Here it enters into "else" and end up with calling sev cmd  22, whic is invalid for SEV guest.
+
+(gdb) n
+1237        if (sev_kvm_type(X86_CONFIDENTIAL_GUEST(sev)) == KVM_X86_DEFAULT_VM) {
+(gdb) n
+1242            struct kvm_sev_init args = { 0 };
+(gdb) l
+1237        if (sev_kvm_type(X86_CONFIDENTIAL_GUEST(sev)) == KVM_X86_DEFAULT_VM) {
+1238            cmd = sev_es_enabled() ? KVM_SEV_ES_INIT : KVM_SEV_INIT;
+1239
+1240            ret = sev_ioctl(sev->sev_fd, cmd, NULL, &fw_error);
+1241        } else {
+1242            struct kvm_sev_init args = { 0 };
+1243
+1244            ret = sev_ioctl(sev->sev_fd, KVM_SEV_INIT2, &args, &fw_error);
+1245          }
+1246        }
+(gdb)
+
+Can you guys check & fix this?
+git reset --hard  663e2f443e
+
+qemu 9.2 with bug patch:
+Jul 13 17:29:50 volcano9b0c-os kernel: mm1: kvm_dev_ioctl 1
+Jul 13 17:29:50 volcano9b0c-os kernel: mm1: kvm_dev_ioctl_create_vm 1
+Jul 13 17:29:50 volcano9b0c-os kernel: mm1: kvm_create_vm 1
+Jul 13 17:29:50 volcano9b0c-os kernel: kvm: mm1: (efault) 1 vm type = 0
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 22
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 4
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 1 kvm->arch.vm_type : 2
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 2 kvm->arch.vm_type : 2
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 3
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 17:29:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 2
+Jul 13 17:29:52 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 17:29:52 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 17:29:52 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 3
+Jul 13 17:29:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 17:29:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 17:29:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 17:29:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 17:29:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 17:29:53 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 17:29:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 17:29:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 17:29:54 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 7
+
+backport with bug patch:
+Jul 13 18:10:51 volcano9b0c-os sudo[252975]: pam_unix(sudo:session): session opened for user root(uid=0) by amd(uid=0)
+Jul 13 18:10:51 volcano9b0c-os kernel: mm1: kvm_dev_ioctl 1
+Jul 13 18:10:51 volcano9b0c-os kernel: mm1: kvm_dev_ioctl_create_vm 1
+Jul 13 18:10:51 volcano9b0c-os kernel: mm1: kvm_create_vm 1
+Jul 13 18:10:51 volcano9b0c-os kernel: kvm: mm1: (null) 1 vm type = 0
+Jul 13 18:10:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:10:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:10:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 22
+Jul 13 18:10:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 4
+Jul 13 18:10:51 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 1 kvm->arch.vm_type : 0
+
+
+
+in arch/x86/kvm/svm/svm.c 
+svm_vm_init()
+Jul 13 18:47:32 volcano9b0c-os sudo[7487]: pam_unix(sudo:session): session opened for user root(uid=0) by root(uid=0)
+Jul 13 18:47:32 volcano9b0c-os kernel: mm1: kvm_dev_ioctl 1
+Jul 13 18:47:32 volcano9b0c-os kernel: mm1: kvm_dev_ioctl_create_vm 1
+Jul 13 18:47:32 volcano9b0c-os kernel: mm1: kvm_create_vm 1
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm: mm1: (null) 1 vm type = 0
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm_amd: mm1: svm_vm_init type: 0 1
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 22
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 4
+Jul 13 18:47:32 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 1 kvm->arch.vm_type : 0
+Jul 13 18:47:32 volcano9b0c-os sudo[7487]: pam_unix(sudo:session): session closed for user root
+
+
+Jul 13 18:48:19 volcano9b0c-os kernel: mm1: kvm_dev_ioctl 1
+Jul 13 18:48:19 volcano9b0c-os kernel: mm1: kvm_dev_ioctl_create_vm 1
+Jul 13 18:48:19 volcano9b0c-os kernel: mm1: kvm_create_vm 1
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm: mm1: (efault) 1 vm type = 0
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: svm_vm_init type: 2 1
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: (efault) type: 0 2
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 22
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 4
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 1 kvm->arch.vm_type : 2
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 2 kvm->arch.vm_type : 2
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_guest_init2 3
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:48:19 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 2
+Jul 13 18:48:20 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:48:20 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:48:20 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 3
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 6
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 2
+Jul 13 18:48:22 volcano9b0c-os kernel: kvm_amd: mm1: sev_mem_enc_ioctl 3 sev_cmd.id: 7
+

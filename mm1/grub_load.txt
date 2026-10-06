@@ -1,0 +1,111 @@
+example
+rub> set root=(hd0,1)
+grub> linux /boot/vmlinuz-3.13.0-29-generic root=/dev/sda1
+grub> initrd /boot/initrd.img-3.13.0-29-generic
+grub> boot
+
+openeuler setup:
+rub> set root=(hd0,gpt2)  [ nvme disk partition which contains "vmlinuz" file ]
+grub> linux /vmlinuz-6.6.0_without_atl_patches_+ root=/dev/mapper/openeuler-root/
+grub> initrd /initramfs-6.6.0_without_atl_patches_+.img
+grub> boot
+
+
+SOL command output
+grub> ls (hd0,gpt1)/efi/
+./ ../ openEuler/ boot/ 
+grub> ls (hd2,gpt1)/efi
+./ ../ boot/ centos/ 
+grub> ls  (hd4,gpt1)/efi
+./ ../ ubuntu/ boot/ 
+grub> 
+
+
+/boot/vmlinuz-6.6.0_without_atl_patches_+
+/boot/initramfs-6.6.0_without_atl_patches_+.img
+
+
+[root@volcano9b0c-os mm2]# ls *atl*
+config-6.6.0_without_atl_patches_+
+initramfs-6.6.0_without_atl_patches_+.img
+System.map-6.6.0_without_atl_patches_+
+vmlinuz-6.6.0_without_atl_patches_+
+[root@volcano9b0c-os mm2]#
+
+
+[root@volcano9b0c-os grub2]# lvdisplay | grep euler
+  LV Path                /dev/openeuler/swap
+  VG Name                openeuler
+  LV Path                /dev/openeuler/home
+  VG Name                openeuler
+  LV Path                /dev/openeuler/root
+
+
+9b0c:
+
+grub> ls (hd0,gpt2)/
+./ ../ lost+found/ efi/ grub2/ dracut/ System.map-6.6.0-28.0.0.34.oe2403.x86_64
+config-6.6.0-28.0.0.34.oe2403.x86_64 symvers-6.6.0-28.0.0.34.oe2403.x86_64.gz 
+vmlinuz-6.6.0-28.0.0.34.oe2403.x86_64 loader/ 
+initramfs-6.6.0-28.0.0.34.oe2403.x86_64.img System.map vmlinuz 
+.vmlinuz-6.6.0-28.0.0.34.oe2403.x86_64.hmac 
+initramfs-0-rescue-ffdcb6835d8b44779eb970a6f7e1d97b.img 
+vmlinuz-0-rescue-ffdcb6835d8b44779eb970a6f7e1d97b 
+initramfs-6.6.0-28.0.0.34.oe2403.x86_64kdump.img config-6.6.0_verify+ 
+vmlinuz-6.6.0_verify+ config-6.6.0sev-snp+ System.map-6.6.0_verify+ 
+initramfs-6.6.0_verify+.img vmlinuz-6.6.0sev-snp+ vmlinuz-6.6.0_all+ 
+System.map-6.6.0sev-snp+ initramfs-6.6.0sev-snp+kdump.img 
+initramfs-6.6.0sev-snp+.img config-6.6.0_all+ System.map-6.6.0_all+ 
+initramfs-6.6.0_all+kdump.img vmlinuz-6.6.0_new__+ config-6.6.0_new__+ 
+initramfs-6.6.0_new__+kdump.img System.map-6.6.0_new__+ 
+initramfs-6.6.0_new__+.img 
+grub> 
+
+
+openeuler setup:
+rub> set root=(hd0,gpt2)  [ nvme disk partition which contains "vmlinuz" file ]
+grub> linux /vmlinuz-6.6.0-28.0.0.34.oe2403.x86_64 root=/dev/mapper/openeuler-root
+grub> initrd /initramfs-6.6.0-28.0.0.34.oe2403.x86_64.img
+grub> boot
+
+openeuler setup:
+rub> set root=(hd0,gpt2)  [ nvme disk partition which contains "vmlinuz" file ]
+grub> linux /vmlinuz-0-rescue-ffdcb6835d8b44779eb970a6f7e1d97b root=/dev/mapper/openeuler-root
+grub>  initrd /initramfs-0-rescue-ffdcb6835d8b44779eb970a6f7e1d97b.img 
+grub> boot
+
+[root@volcano9b0c-os etc]# blkid | grep nvme1n1p
+/dev/nvme1n1p1: UUID="437C-338F" BLOCK_SIZE="512" TYPE="vfat" PARTLABEL="EFI System Partition" PARTUUID="d14768c9-b704-4e31-8346-9043634aa7a0"
+/dev/nvme1n1p2: UUID="7d89e0ae-b3fa-43bb-a968-594dad49e31d" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="81a8860b-2a26-4ef7-972f-97eb732ab477"
+/dev/nvme1n1p3: UUID="iyYxBw-02qC-oZvN-b8jo-VCtx-q3Dc-Ewxnj8" TYPE="LVM2_member" PARTUUID="964e27bd-fa1a-48c1-a6d3-b30ba4485163"
+
+
+ISO boot & install
+###################
+
+
+menuentry "My ISO" {
+  set ISOFile="/opt/Live-ISOs/clonezilla-live-20170905-zesty-amd64.iso"
+  loopback loop (hd2,gpt2)$ISOFile
+  linuxefi (loop)/live/vmlinuz boot=live components config findiso=$ISOFile ip=frommedia toram=filesystem.squashfs union=overlay
+  initrdefi (loop)/live/initrd.img
+}
+
+
+Ubuntu:
+
+menuentry "cloudos92 ISO" {
+  insmod ext2
+  set isofile="/iso/OpenCloudOS-9.2-20250221.0-x86_64-minimal.iso"
+  loopback loop (hd7,5)$isofile
+  linux (loop)/images/pxeboot/vmlinuz boot=images iso-scan/filename=$isofile quiet noeject noprompt splash
+  initrd (loop)/images/pxeboot/initrd.img
+}
+
+
+menuentry "cloudos92 ISO" {
+  set ISOFile="/iso/OpenCloudOS-9.2-20250221.0-x86_64-minimal.iso"
+  loopback loop (hd7,gpt3)$ISOFile
+  linuxefi (loop)/images/pxeboot/vmlinuz boot=images/pxeboot components config findiso=$ISOFile ip=frommedia toram=filesystem.squashfs union=overlay
+  initrdefi (loop)/images/pxeboot/initrd.img
+}

@@ -1,0 +1,29 @@
+# normal VM creation
+#/home/amd/qemu-9.2.x/build/qemu-system-x86_64 \
+/usr/bin/qemu-kvm \
+        -enable-kvm \
+        -machine pc -smp 4 \
+        -m 1024M \
+        -no-reboot \
+        -drive file=/vms/images/mm1.qcow2,if=none,id=disk0,format=qcow2 \
+        -device virtio-scsi-pci,id=scsi0,disable-legacy=on,iommu_platform=true \
+        -device scsi-hd,drive=disk0 \
+        -netdev user,hostfwd=tcp::10025-:22,id=vmnic \
+        -device e1000,netdev=vmnic,romfile= \
+        -vga std -vnc :1 \
+        -drive file=/vms/iso/openEuler-22.03-LTS-SP3-x86_64-dvd.iso,media=cdrom,index=0 \
+        -monitor pty \
+        -monitor unix:monitor,server,nowait 2>&1 | tee boot.out
+
+
+
+After running the above command, in another window run: vncviewer :1 [ will open GUI to install ]
+
+ARM:
+
+ sudo apt install qemu-system-arm
+ qemu-system-arm -m 2G -hda arm64_disk.img -cdrom <path/to/os_image.iso> -enable-kvm -cpu cortex-a57 -machine virt
+
+ qemu-system-arm -m 16G -hda /home/amd/vol2/images/velinux_arm64.qcow2 -cdrom /home/amd/vol1/iso/velinux-2.1-arm64-DVD-1.iso -enable-kvm -cpu cortex-a57 -machine virt
+
+ qemu-system-arm -m 2G -hda /home/amd/vol2/images/velinux_arm64.qcow2 -cdrom /home/amd/vol1/iso/velinux-2.1-arm64-DVD-1.iso -enable-kvm -cpu cortex-a57 -machine virt -vga std -vnc :1

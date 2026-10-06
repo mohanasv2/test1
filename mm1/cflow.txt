@@ -1,0 +1,4 @@
+apt get install cflow
+apt get install graphviz
+
+cflow --main=cpuhp_ap_report_dead -f dot cpu.c | dot -Tpng -o callgraph.png

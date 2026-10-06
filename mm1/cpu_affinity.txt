@@ -1,0 +1,24 @@
+Affinity: 
+"virsh capabilities" on Host => will show the cpu , core & numa details
+
+xml file:
+
+example 1:
+<vcpu placement='static' cpuset='0-15'>16</vcpu>    ==> 16 vcpus contained within first phys cpus 0-15 
+
+example 2:
+ <vcpu placement='static' cpuset='0-15,32-47'>42</vcpu>  
+   ==> cpus 0-15 & 32-47 are on first socket
+   ==> SMP enabled, cpu ids 0 & 32 are SMPs (siblings) of core 1
+ 
+example 3:
+
+  <vcpu placement='static' cpuset='0,32'>4</vcpu>  ==> single core affinity (0 & 32 are siblings on a core)
+
+After starting guest with cpu affinity, run:  virsh vcpuinfo mohan_x2avic_1
+
+
+qemu command:
+
+-cpu host,affinity=0-3
+

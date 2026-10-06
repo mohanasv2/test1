@@ -1,0 +1,38 @@
+Anolis/Clousos/openeuler
+
+sudo dnf install -y httpd
+sudo systemctl enable --now httpd
+sudo systemctl status httpd
+
+echo "<h1>Hello from RHEL HTTP Server</h1>"  | sudo tee /var/www/html/index.html
+
+Ubuntu/velinux/Debian
+
+apt install -y apache2
+systemctl enable --now apache2
+cat /var/www/html/index.html
+HTTP Server is working
+
+http://<serverip>
+
+
+useful commands:
+sudo systemctl restart apache2
+sudo systemctl reload apache2
+sudo systemctl stop apache2
+sudo systemctl start apache2
+
+
+http://10.86.26.142/iso/Anolis23.4/os/
+
+http://10.86.26.142/iso/Anolis23.5/os/
+
+http://10.86.26.102/iso/Cloudos9.6/BaseOS/
+
+5:09 - 5:10 - 
+
+
+10.86.24.236
+
+
+

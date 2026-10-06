@@ -1,0 +1,42 @@
+kabi repo:  https://github.com/carbonsoft/kernel/blob/master/check-kabi
+
+git clone https://github.com/carbonsoft/kernel.git
+
+gitee:
+
+  https://gitee.com/src-openeuler/kernel/blob/master/check-kabi
+  git clone https://gitee.com/src-openeuler/kernel.git
+
+kabi check command line:
+
+/home/amd/src/kabi/kernel/check-kabi -k  /home/amd/Module.kabi_x86_64 -s /home/amd/src/euler2203_510/Linux_Backport/Module.symvers
+
+script which creates Module.symvers during kernel build:
+	scripts/mod/modpost -M -m -a      -o Module.symvers -T modules.order vmlinux.o
+        [ .Module.symvers.cmd file under Linux src dir contains above line, you can see after the build ]
+        [.Module.symvers.cmd file content:
+          savedcmd_Module.symvers :=  scripts/mod/modpost -M -m -a      -o Module.symvers -T modules.order vmlinux.o ]
+
+example run:
+    scripts/mod/modpost -M -m -a  -o  /home/amd/mohan1 -T modules.order vmlinux.o
+     [ /home/amd/mohan1 will have vmlinux.o symbols ]
+   
+
+
+dir:
+
+/home/amd/mohan/euler510/check-kabi/kernel/Module.kabi_x86_64
+
+./check-kabi  -k ./Module.kabi_x86_64 -s /home/amd/mohan/euler510/Linux_Backport/Module.symvers
+
+new:
+0x80d73377      acpi_bus_get_device     vmlinux EXPORT_SYMBOL
+0xd3b1bc69      acpi_bus_register_driver        vmlinux EXPORT_SYMBOL
+
+old:
+0x3da0fa32      acpi_bus_get_device     vmlinux EXPORT_SYMBOL
+0x8c7f3019      acpi_bus_register_driver        vmlinux EXPORT_SYMBOL
+
+
+0xf7370f56      system_state    vmlinux EXPORT_SYMBOL
+

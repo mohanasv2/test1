@@ -1,0 +1,162 @@
+sudo apt update
+sudo apt install parted
+
+## create a lable GUID
+parted -a optimal /dev/nvme0n1 mklabel gpt
+
+## create a partition with 50% size of whole disk
+parted -a optimal /dev/nvme0n1 mkpart primary ext4 0% 50%
+
+## creating ext4 FS
+
+mkfs.ext4 /dev/nvme0n1p1
+
+## creating EFI boot partition
+#################################################################################
+#parted /dev/nvme0n1
+(parted)mklabel gpt
+(parted)mkpart primary fat32 0% 1%
+(parted)set 1 esp on
+(parted)set 1 msftdata off
+(parted)name 1 "EFI System Partition"
+(parted) mkpart primary 1% 34%
+(parted) mkpart primary 34% 66%
+(parted) mkpart primary 66% 100%
+
+(parted) p
+Model: SAMSUNG MZWLO3T8HCLS-00A07 (nvme)
+Disk /dev/nvme0n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  38.4GB  38.4GB  fat32        EFI System Partition  boot, esp
+ 2      38.4GB  960GB   922GB                primary
+ 3      999GB   1920GB  922GB                primary
+ 4      1959GB  2881GB  922GB                primary
+ 5      2919GB  3841GB  922GB                primary
+
+#################################################################################
+
+
+Example:
+
+###############################################
+[root@volcano9b5e-os amd]# parted /dev/nvme1n1
+GNU Parted 3.6
+Using /dev/nvme1n1
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) print
+Model: SAMSUNG MZWLO3T8HCLS-00A07 (nvme)
+Disk /dev/nvme1n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name     Flags
+ 1      1049kB  1920GB  1920GB  ext4         primary
+
+(parted) mkpart primary ext4 51% 75%
+(parted) print
+Model: SAMSUNG MZWLO3T8HCLS-00A07 (nvme)
+Disk /dev/nvme1n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name     Flags
+ 1      1049kB  1920GB  1920GB  ext4         primary
+ 2      1959GB  2881GB  922GB   ext4         primary
+
+(parted) mkpart primary ext4 76% 100%
+(parted) print
+Model: SAMSUNG MZWLO3T8HCLS-00A07 (nvme)
+Disk /dev/nvme1n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system  Name     Flags
+ 1      1049kB  1920GB  1920GB  ext4         primary
+ 2      1959GB  2881GB  922GB   ext4         primary
+ 3      2919GB  3841GB  922GB   ext4         primary
+
+(parted)
+
+
+
+http://10.86.27.183:8080/login?from=%2F
+
+/etc/grub.d/40_custom
+
+df --output=source /opt/Live-ISOs/gparted-live-0.31.0-1-amd64.iso | tail -1
+df --output=source /vms/iso/openEuler-22.03-LTS-SP3-x86_64-dvd.iso | tail -1
+
+
+menuentry "My ISO" {
+  set ISOFile="/opt/Live-ISOs/clonezilla-live-20170905-zesty-amd64.iso"
+  loopback loop (hd2,gpt2)$ISOFile
+  linuxefi (loop)/live/vmlinuz boot=live components config findiso=$ISOFile ip=frommedia toram=filesystem.squashfs union=overlay
+  initrdefi (loop)/live/initrd.img
+}
+
+/mm1/isolinux/initrd.img
+/mm1/isolinux/vmlinuz
+
+if (boot_cpu_has(X86_FEATURE_SPLIT_LOCK_DETECT))
+
+#define test_cpu_cap(c, bit)                                            \
+         arch_test_bit(bit, (unsigned long *)((c)->x86_capability))
+
+
+Number  Start   End     Size    File system  Name      Flagsra
+ 1      1049kB  960GB   960GB   ext4         primary1
+ 2      999GB   2304GB  1306GB  ext4         primary2
+ 3      2343GB  2881GB  538GB   ext4         primary3
+
+no library named udev
+
+parted -a optimal /dev/nvme4n1 mklabel gpt
+ mkpart primary ext4 1% 25%
+
+
+ mkpart primary ext4 30% 50%
+
+99fc:
+nvme2n1                                  259:5    0   3.5T  0 disk
+├─nvme2n1p1                              259:6    0 894.2G  0 part
+├─nvme2n1p2                              259:7    0 894.2G  0 part
+├─nvme2n1p3                              259:8    0 894.2G  0 part
+├─nvme2n1p4                              259:9    0   513M  0 part
+├─nvme2n1p5                              259:10   0  27.9G  0 part
+├─nvme2n1p6                              259:11   0   977M  0 part
+└─nvme2n1p7                              259:12   0 864.9G  0 part
+
+[after /dev/nvme2n1p3 deletion ]
+nvme2n1                                  259:5    0   3.5T  0 disk
+├─nvme2n1p1                              259:8    0 894.2G  0 part
+├─nvme2n1p2                              259:26   0 894.2G  0 part
+├─nvme2n1p4                              259:27   0   513M  0 part
+├─nvme2n1p5                              259:28   0  27.9G  0 part
+├─nvme2n1p6                              259:29   0   977M  0 part
+└─nvme2n1p7                              259:30   0 864.9G  0 part
+
+
+(parted) p
+Model: SAMSUNG MZWLO3T8HCLS-00A07 (nvme)
+Disk /dev/nvme2n1: 3841GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start   End     Size    File system     Name                                Flags
+ 1      1049kB  960GB   960GB   fat32           primary
+ 2      960GB   1920GB  960GB                   primary
+ 3      1920GB  1959GB  38.4GB  fat32           EFI System Partition for Euler2203  boot, esp
+ 4      2881GB  2881GB  538MB   fat32                                               boot, esp
+ 5      2881GB  2911GB  30.0GB  ext4
+ 6      2911GB  2912GB  1024MB  linux-swap(v1)                                      swap
+ 7      2912GB  3841GB  929GB   ext4
+
+
